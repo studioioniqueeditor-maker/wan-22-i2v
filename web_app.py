@@ -83,30 +83,58 @@ def generate():
             runpod_api_key=runpod_api_key
         )
 
-        try:
-            # Generate video
-            result = client.create_video_from_image(
-                image_path=image_path,
-                prompt=prompt,
-                negative_prompt=negative_prompt,
-                width=1280,
-                height=720,
-                length=81,
-                steps=30,
-                seed=42,
-                cfg=cfg
-            )
+        # MOCK MODE: Set this to True to test GCS without RunPod
+        MOCK_MODE = os.getenv("MOCK_MODE", "false").lower() == "true"
 
-            if result.get('status') == 'COMPLETED':
+        try:
+            if MOCK_MODE:
+                print("MOCK MODE ENABLED: Skipping RunPod generation.")
+                # Simulate a successful result using an existing file
+                result = {
+                    'status': 'COMPLETED',
+                    'metrics': {'spin_up_time': 0.1, 'generation_time': 0.1}
+                }
+                # Use the first video found in output/ for mocking
+                existing_videos = [f for f in os.listdir(app.config['OUTPUT_FOLDER']) if f.endswith('.mp4')]
+                if not existing_videos:
+                    return render_template('index.html', error="Mock mode failed: No existing videos in output/ folder.")
+                
+                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                output_filename = f"mock_{timestamp}.mp4"
+                output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
+                
+                # Copy existing video to mock path
+                import shutil
+                shutil.copy(os.path.join(app.config['OUTPUT_FOLDER'], existing_videos[0]), output_path)
+                
+                # Create a fake 'save' success
+                save_success = True
+            else:
+                # Generate video
+                result = client.create_video_from_image(
+                    image_path=image_path,
+                    prompt=prompt,
+                    negative_prompt=negative_prompt,
+                    width=1280,
+                    height=720,
+                    length=81,
+                    steps=30,
+                    seed=42,
+                    cfg=cfg
+                )
+                
                 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 output_filename = f"wan22_{timestamp}.mp4"
                 output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
-                
-                if client.save_video_result(result, output_path):
+                save_success = client.save_video_result(result, output_path)
+
+            if result.get('status') == 'COMPLETED':
+                if save_success:
                     video_url = url_for('get_video', filename=output_filename)
                     
                     # Try to upload to GCS if configured
-                    if os.getenv("GCS_BUCKET_NAME"):
+                    bucket_name = os.getenv("GCS_BUCKET_NAME")
+                    if bucket_name:
                         try:
                             storage_service = StorageService()
                             gcs_url = storage_service.upload_file(output_path, f"videos/{output_filename}")
@@ -114,8 +142,9 @@ def generate():
                             # Optional: Remove local file after successful upload
                             # os.remove(output_path) 
                         except Exception as e:
-                            print(f"GCS Upload failed: {e}")
-
+                            print(f"ERROR: GCS Upload failed: {e}")
+                            import traceback
+                            traceback.print_exc()
                     metrics = result.get('metrics', {})
                     return render_template('index.html', video_url=video_url, metrics=metrics)
                 else:
