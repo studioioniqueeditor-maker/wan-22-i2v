@@ -133,7 +133,15 @@
             </div>
             
             <div class="mb-3">
-                <label for="prompt" class="form-label">Prompt</label>
+                <label for="prompt" class="form-label d-flex justify-content-between">
+                    Prompt
+                    <button type="button" id="enhance-btn" class="btn btn-sm btn-outline-info" style="border-radius: 20px; font-size: 0.75rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-stars me-1" viewBox="0 0 16 16">
+                            <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.882 1.882l1.937.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.882 1.882l-.645 1.937c-.11.33-.576.33-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.882-1.882l-1.937-.645c-.33-.11-.33-.576 0-.686l1.937-.645a2.89 2.89 0 0 0 1.882-1.882l.645-1.937zM14.083 2.5a.512.512 0 0 1 .657.657l-.07.21a1.03 1.03 0 0 0 .67.67l.21.07a.512.512 0 0 1 0 .973l-.21.07a1.03 1.03 0 0 0-.67.67l-.07.21a.512.512 0 0 1-.973 0l-.07-.21a1.03 1.03 0 0 0-.67-.67l-.21-.07a.512.512 0 0 1 0-.973l.21-.07a1.03 1.03 0 0 0 .67-.67l.07-.21zM2.5 14.083a.512.512 0 0 1 .657.657l-.07.21a1.03 1.03 0 0 0 .67.67l.21.07a.512.512 0 0 1 0 .973l-.21.07a1.03 1.03 0 0 0-.67.67l-.07.21a.512.512 0 0 1-.973 0l-.07-.21a1.03 1.03 0 0 0-.67-.67l-.21-.07a.512.512 0 0 1 0-.973l.21-.07a1.03 1.03 0 0 0 .67-.67l.07-.21z"/>
+                        </svg>
+                        ✨ Enhance Prompt
+                    </button>
+                </label>
                 <textarea class="form-control" id="prompt" name="prompt" rows="3" required placeholder="Describe your video...">A cinematic shot of...</textarea>
             </div>
             
