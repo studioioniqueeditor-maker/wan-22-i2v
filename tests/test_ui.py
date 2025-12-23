@@ -50,3 +50,18 @@ def test_button_interactions(client):
     
     # Check for transform on hover
     assert "transform: translateY(-2px)" in style_content, "Button hover transform not found"
+
+def test_dropzone_and_loading(client):
+    response = client.get('/')
+    assert response.status_code == 200
+    
+    soup = BeautifulSoup(response.data, 'html.parser')
+    style_content = soup.find('style').string if soup.find('style') else ""
+    
+    # Check for drop zone styles
+    assert ".drop-zone" in style_content, "Drop zone class not found in CSS"
+    assert "border: 2px dashed" in style_content, "Drop zone dashed border not found"
+    
+    # Check for custom loading animation
+    assert "@keyframes pulse-glow" in style_content, "Pulse glow animation not found"
+    assert "animation: pulse-glow" in style_content, "Animation usage not found"
