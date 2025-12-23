@@ -109,6 +109,16 @@
             height: 3rem;
             color: var(--vivid-accent) !important;
         }
+
+        /* Textarea Pulse */
+        @keyframes text-pulse {
+            0% { border-color: var(--glass-border); }
+            50% { border-color: var(--vivid-accent); box-shadow: 0 0 10px rgba(168, 85, 247, 0.3); }
+            100% { border-color: var(--glass-border); }
+        }
+        .enhancing {
+            animation: text-pulse 1.5s infinite;
+        }
     </style>
 </head>
 <body>
@@ -201,6 +211,7 @@
 
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ✨ Enhancing...';
+            promptArea.classList.add('enhancing');
 
             try {
                 const formData = new FormData();
