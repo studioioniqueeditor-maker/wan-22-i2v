@@ -20,3 +20,17 @@ def test_vividflow_theme(client):
     
     # Check for Electric Purple accent
     assert "#A855F7" in style_content, "Electric Purple accent not found"
+
+def test_glassmorphism(client):
+    response = client.get('/')
+    assert response.status_code == 200
+    
+    soup = BeautifulSoup(response.data, 'html.parser')
+    style_content = soup.find('style').string if soup.find('style') else ""
+    
+    # Check for backdrop-filter blur
+    assert "backdrop-filter: blur" in style_content, "Backdrop filter not found"
+    
+    # Check for container glass styles
+    assert "background: rgba(255, 255, 255, 0.05)" in style_content, "Container glass background not found"
+    assert "border: 1px solid rgba(255, 255, 255, 0.1)" in style_content, "Container glass border not found"
