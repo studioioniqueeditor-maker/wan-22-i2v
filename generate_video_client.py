@@ -7,7 +7,7 @@ class GenerateVideoClient:
     def __init__(self, runpod_endpoint_id, runpod_api_key):
         self.endpoint_id = runpod_endpoint_id
         self.api_key = runpod_api_key
-        self.url = f"https://api.runpod.ai/v2/{self.endpoint_id}/runsync"
+        self.url = f"https://api.runpod.ai/v2/{self.endpoint_id}/run"
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
@@ -35,7 +35,7 @@ class GenerateVideoClient:
             }
         }
 
-        print("Sending request to RunPod...")
+        print(f"Sending request to RunPod: {self.url}")
         try:
             # Increased timeout for video generation
             response = requests.post(self.url, json=payload, headers=self.headers, timeout=600)

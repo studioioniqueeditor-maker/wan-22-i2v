@@ -4,5 +4,5 @@
 - [x] Task: Add CFG slider to `templates/index.html` with default 7.5. [b51bd31]
 - [x] Task: Add JavaScript to update the displayed CFG value on slider change. [b51bd31]
 - [x] Task: Update `web_app.py` to handle the `cfg` form field. [57d608e]
-- [~] Task: Verify `GenerateVideoClient` accepts and uses the `cfg` parameter.
-- [ ] Task: Conductor - User Manual Verification 'Expose and Default CFG' (Protocol in workflow.md)
+- [x] Task: Verify `GenerateVideoClient` accepts and uses the `cfg` parameter. [57d608e]
+- [~] Task: Conductor - User Manual Verification 'Expose and Default CFG' (Protocol in workflow.md)
