@@ -65,3 +65,17 @@ def test_dropzone_and_loading(client):
     # Check for custom loading animation
     assert "@keyframes pulse-glow" in style_content, "Pulse glow animation not found"
     assert "animation: pulse-glow" in style_content, "Animation usage not found"
+
+def test_cfg_slider(client):
+    response = client.get('/')
+    assert response.status_code == 200
+    
+    soup = BeautifulSoup(response.data, 'html.parser')
+    
+    # Check for CFG input
+    cfg_input = soup.find('input', {'id': 'cfg'})
+    assert cfg_input is not None, "CFG input not found"
+    assert cfg_input['type'] == 'range', "CFG input should be a range slider"
+    assert cfg_input['value'] == '7.5', "Default CFG value should be 7.5"
+    assert cfg_input['min'] == '1.0', "CFG min should be 1.0"
+    assert cfg_input['max'] == '20.0', "CFG max should be 20.0"
