@@ -13,5 +13,5 @@
 - [ ] Task: Create unit tests for `PromptEnhancer`.
 - [x] Task: Add a `/enhance_prompt` route to `web_app.py`. [7fa0051]
 - [x] Task: Implement "Enhance Prompt" button in `index.html` with AJAX/Fetch integration. [ef39560]
-- [ ] Task: Add visual feedback (loader/glow) while the prompt is being enhanced.
+- [x] Task: Add visual feedback (loader/glow) while the prompt is being enhanced. [5235f0c]
 - [ ] Task: Conductor - User Manual Verification 'Groq Prompt Enhancement Integration' (Protocol in workflow.md)
