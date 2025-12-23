@@ -8,7 +8,7 @@
 - [x] Task: Conductor - User Manual Verification 'VividFlow UI Refresh' (Protocol in workflow.md) [7c43e7b]
 
 ## Phase 2: Groq Prompt Enhancement Integration
-- [ ] Task: Add `groq` to requirements.txt and install.
+- [x] Task: Add `groq` to requirements.txt and install. [743b507]
 - [ ] Task: Implement a `PromptEnhancer` class in a new module `prompt_enhancer.py` using Groq API.
 - [ ] Task: Create unit tests for `PromptEnhancer`.
 - [ ] Task: Add a `/enhance_prompt` route to `web_app.py`.
