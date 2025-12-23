@@ -50,6 +50,33 @@ def test_generate_video_with_cfg(client):
         import os
         os.remove('tests/test_image.jpg')
 
+def test_generate_video_uploads_to_gcs(client):
+    with patch('web_app.GenerateVideoClient') as mock_client_cls, \
+         patch('web_app.StorageService') as mock_storage_cls, \
+         patch.dict('os.environ', {'RUNPOD_API_KEY': 'test_key', 'RUNPOD_ENDPOINT_ID': 'test_id', 'GCS_BUCKET_NAME': 'test-bucket'}):
+        
+        mock_instance = mock_client_cls.return_value
+        mock_instance.create_video_from_image.return_value = {'status': 'COMPLETED', 'output': 'video_data'}
+        mock_instance.save_video_result.return_value = True
+        
+        mock_storage = mock_storage_cls.return_value
+        mock_storage.upload_file.return_value = "https://gcs-url/video.mp4"
+        
+        with open('tests/test_image.jpg', 'wb') as f:
+            f.write(b'fake')
+            
+        with open('tests/test_image.jpg', 'rb') as f:
+            response = client.post('/generate', data={'image': (f, 'test_image.jpg'), 'prompt': 'test'})
+            
+        assert response.status_code == 200
+        assert b'https://gcs-url/video.mp4' in response.data
+        
+        # Verify upload was called
+        mock_storage.upload_file.assert_called_once()
+        
+        import os
+        os.remove('tests/test_image.jpg')
+
 def test_timing_metrics_in_response(client):
     with patch('web_app.GenerateVideoClient') as mock_client_cls, \
          patch.dict('os.environ', {'RUNPOD_API_KEY': 'test_key', 'RUNPOD_ENDPOINT_ID': 'test_id'}):

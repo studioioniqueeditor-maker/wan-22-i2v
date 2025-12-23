@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, send_from_directory, url_for,
 from dotenv import load_dotenv
 from generate_video_client import GenerateVideoClient
 from prompt_enhancer import PromptEnhancer
+from storage_service import StorageService
 
 # Load environment variables
 load_dotenv(".env.client")
@@ -103,6 +104,18 @@ def generate():
                 
                 if client.save_video_result(result, output_path):
                     video_url = url_for('get_video', filename=output_filename)
+                    
+                    # Try to upload to GCS if configured
+                    if os.getenv("GCS_BUCKET_NAME"):
+                        try:
+                            storage_service = StorageService()
+                            gcs_url = storage_service.upload_file(output_path, f"videos/{output_filename}")
+                            video_url = gcs_url
+                            # Optional: Remove local file after successful upload
+                            # os.remove(output_path) 
+                        except Exception as e:
+                            print(f"GCS Upload failed: {e}")
+
                     metrics = result.get('metrics', {})
                     return render_template('index.html', video_url=video_url, metrics=metrics)
                 else:
