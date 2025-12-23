@@ -15,6 +15,7 @@ VividFlow is a high-end toolkit and platform designed to transform static images
 
 ## Key Features & Roadmap
 *   **Advanced Parameter Control:** Granular control over motion intensity, fluidity, and frame-level settings to empower creative direction.
+*   **Performance Metrics:** Real-time tracking and display of generation statistics, including spin-up (queue) time and actual synthesis duration.
 *   **AI Prompt Enhancer:** Integration with Groq API (utilizing Llama-3 or Qwen) to automatically expand simple user inputs into rich, cinematic prompts for better model results.
 *   **"VividFlow" Visual Identity:** A premium "Studio" feel using a Deep Charcoal/OLED Black theme, Electric Purple accents, and glassmorphism UI elements.
 *   **Live Progress Experience:** Dynamic visual feedback and animations that track the generation process in real-time.

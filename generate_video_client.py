@@ -37,6 +37,7 @@ class GenerateVideoClient:
 
         print(f"Sending request to RunPod: {self.url}")
         try:
+            submission_time = time.time()
             # Increased timeout for video generation
             response = requests.post(self.url, json=payload, headers=self.headers, timeout=600)
             
@@ -54,7 +55,15 @@ class GenerateVideoClient:
                 return {"status": "FAILED", "error": data['error']}
             
             if "output" in data:
-                return self._process_output(data)
+                completion_time = time.time()
+                metrics = {
+                    "submission_time": submission_time,
+                    "start_time": submission_time, # Started immediately
+                    "completion_time": completion_time,
+                    "spin_up_time": 0,
+                    "generation_time": completion_time - submission_time
+                }
+                return self._process_output(data, metrics)
             
             # If status is not COMPLETED (e.g. IN_QUEUE, IN_PROGRESS), start polling
             job_id = data.get("id")
@@ -62,19 +71,21 @@ class GenerateVideoClient:
             
             if job_id and status in ["IN_QUEUE", "IN_PROGRESS"]:
                 print(f"Job {job_id} is {status}. Polling for completion...")
-                return self._poll_job(job_id)
+                return self._poll_job(job_id, submission_time)
             
             return {"status": status, "id": job_id}
 
         except Exception as e:
             return {"status": "FAILED", "error": str(e)}
 
-    def _poll_job(self, job_id, timeout=600, interval=5):
+    def _poll_job(self, job_id, submission_time, timeout=600, interval=5):
         """Polls the status endpoint until completion or timeout."""
-        start_time = time.time()
         status_url = f"https://api.runpod.ai/v2/{self.endpoint_id}/status/{job_id}"
         
-        while time.time() - start_time < timeout:
+        start_time = None # Time when status became IN_PROGRESS
+        polling_start = time.time()
+        
+        while time.time() - polling_start < timeout:
             try:
                 response = requests.get(status_url, headers=self.headers)
                 if response.status_code != 200:
@@ -85,8 +96,28 @@ class GenerateVideoClient:
                 data = response.json()
                 status = data.get("status")
                 
+                if status == "IN_PROGRESS" and start_time is None:
+                    start_time = time.time()
+                
                 if status == "COMPLETED":
-                    return self._process_output(data)
+                    completion_time = time.time()
+                    
+                    # If we missed the transition to IN_PROGRESS (e.g. very fast job), assume it started just before finishing or use submission time if logic dictates.
+                    # For metrics consistency:
+                    if start_time is None:
+                        start_time = submission_time 
+                        
+                    spin_up_time = start_time - submission_time
+                    generation_time = completion_time - start_time
+                    
+                    metrics = {
+                        "submission_time": submission_time,
+                        "start_time": start_time,
+                        "completion_time": completion_time,
+                        "spin_up_time": spin_up_time,
+                        "generation_time": generation_time
+                    }
+                    return self._process_output(data, metrics)
                 elif status == "FAILED":
                     return {"status": "FAILED", "error": data.get("error", "Unknown job error")}
                 
@@ -99,11 +130,15 @@ class GenerateVideoClient:
                 
         return {"status": "FAILED", "error": "Polling timed out"}
 
-    def _process_output(self, data):
+    def _process_output(self, data, metrics=None):
         output = data.get("output")
         if isinstance(output, dict) and "error" in output:
              return {"status": "FAILED", "error": output["error"]}
-        return {"status": "COMPLETED", "output": output}
+        
+        result = {"status": "COMPLETED", "output": output}
+        if metrics:
+            result["metrics"] = metrics
+        return result
 
     def save_video_result(self, result, output_path):
         if result.get("status") != "COMPLETED":

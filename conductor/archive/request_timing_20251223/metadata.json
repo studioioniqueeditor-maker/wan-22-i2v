@@ -1,0 +1,8 @@
+{
+  "track_id": "request_timing_20251223",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2025-12-23T12:05:00Z",
+  "updated_at": "2025-12-23T12:05:00Z",
+  "description": "Measure and display total request time, spin-up time, and generation time."
+}
