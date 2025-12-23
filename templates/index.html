@@ -126,6 +126,7 @@
                         </svg>
                         <p class="mb-0">Drag & Drop or Click to Upload</p>
                     </div>
+                    <img id="image-preview" src="#" alt="Image Preview" style="display: none; max-width: 100%; max-height: 200px; border-radius: 8px; margin: 10px auto; object-fit: contain;">
                     <input class="drop-zone-input" type="file" id="image" name="image" accept="image/*" required onchange="updateFileName(this)">
                 </div>
                 <div id="file-name" class="mt-2 text-muted small text-center"></div>
@@ -181,8 +182,24 @@
         };
 
         function updateFileName(input) {
-            const fileName = input.files[0] ? input.files[0].name : '';
-            document.getElementById('file-name').textContent = fileName;
+            const file = input.files[0];
+            if (file) {
+                document.getElementById('file-name').textContent = file.name;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('image-preview');
+                    const text = document.querySelector('.drop-zone-text');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    text.style.display = 'none'; // Hide text when image is shown
+                }
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById('file-name').textContent = '';
+                document.getElementById('image-preview').style.display = 'none';
+                document.querySelector('.drop-zone-text').style.display = 'block';
+            }
         }
     </script>
 </body>
