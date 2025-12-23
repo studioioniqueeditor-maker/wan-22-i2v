@@ -5,3 +5,4 @@ pytest
 beautifulsoup4
 pytest-cov
 groq
+google-cloud-storage
