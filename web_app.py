@@ -1,9 +1,10 @@
 import os
 import datetime
 import uuid
-from flask import Flask, render_template, request, send_from_directory, url_for
+from flask import Flask, render_template, request, send_from_directory, url_for, jsonify
 from dotenv import load_dotenv
 from generate_video_client import GenerateVideoClient
+from prompt_enhancer import PromptEnhancer
 
 # Load environment variables
 load_dotenv(".env.client")
@@ -20,6 +21,25 @@ os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
+
+@app.route('/enhance_prompt', methods=['POST'])
+def enhance_prompt():
+    original_prompt = request.form.get('prompt')
+    if not original_prompt:
+        return jsonify({"error": "No prompt provided"}), 400
+    
+    runpod_api_key = os.getenv("RUNPOD_API_KEY")
+    groq_api_key = os.getenv("GROQ_API_KEY")
+
+    if not groq_api_key:
+        return jsonify({"error": "GROQ_API_KEY not set in environment"}), 500
+
+    try:
+        enhancer = PromptEnhancer(api_key=groq_api_key)
+        enhanced_prompt = enhancer.enhance(original_prompt)
+        return jsonify({"enhanced_prompt": enhanced_prompt})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/generate', methods=['POST'])
 def generate():
