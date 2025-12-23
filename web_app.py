@@ -103,7 +103,8 @@ def generate():
                 
                 if client.save_video_result(result, output_path):
                     video_url = url_for('get_video', filename=output_filename)
-                    return render_template('index.html', video_url=video_url)
+                    metrics = result.get('metrics', {})
+                    return render_template('index.html', video_url=video_url, metrics=metrics)
                 else:
                     return render_template('index.html', error="Failed to save video result.")
             else:
