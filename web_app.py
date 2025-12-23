@@ -52,6 +52,11 @@ def generate():
 
     prompt = request.form.get('prompt')
     negative_prompt = request.form.get('negative_prompt', 'blurry, low quality, distorted')
+    
+    try:
+        cfg = float(request.form.get('cfg', 7.5))
+    except ValueError:
+        cfg = 7.5
 
     if file:
         # Save uploaded image
@@ -61,10 +66,15 @@ def generate():
 
         # Get credentials
         runpod_api_key = os.getenv("RUNPOD_API_KEY")
-        runpod_endpoint_id = os.getenv("RUNPOD_ENDPOINT_ID") or '3r0ibyzfx7y2bz'
+        runpod_endpoint_id = os.getenv("RUNPOD_ENDPOINT_ID")
 
         if not runpod_api_key:
             return render_template('index.html', error="RUNPOD_API_KEY not set in .env.client")
+        
+        if not runpod_endpoint_id:
+            return render_template('index.html', error="RUNPOD_ENDPOINT_ID not set in .env.client")
+
+        print(f"Using Endpoint ID: {runpod_endpoint_id}")
 
         # Initialize client
         client = GenerateVideoClient(
@@ -83,7 +93,7 @@ def generate():
                 length=81,
                 steps=30,
                 seed=42,
-                cfg=20
+                cfg=cfg
             )
 
             if result.get('status') == 'COMPLETED':
