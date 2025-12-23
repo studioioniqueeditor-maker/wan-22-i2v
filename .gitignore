@@ -1,1 +1,3 @@
 .env.client
+input_images/
+output_videos/
