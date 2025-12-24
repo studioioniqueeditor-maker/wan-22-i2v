@@ -9,3 +9,4 @@ google-cloud-storage
 supabase
 supabase
 Flask-Bcrypt
+Flask-Limiter
