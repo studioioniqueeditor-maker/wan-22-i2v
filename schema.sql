@@ -29,12 +29,25 @@ ALTER TABLE public.history ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Enable read access for users based on user_id" ON public.profiles FOR SELECT USING (auth.uid() = id);
 -- Allow users to update their own profile.
 CREATE POLICY "Enable update for users based on user_id" ON public.profiles FOR UPDATE USING (auth.uid() = id);
--- **NEW:** Allow users to insert their own profile.
-CREATE POLICY "Enable insert for users based on user_id" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
 
-
--- Create Policies for History
+-- History Policies
 -- Allow users to view their own history.
 CREATE POLICY "Enable read access for users based on user_id" ON public.history FOR SELECT USING (auth.uid() = user_id);
 -- Allow users to insert their own history.
 CREATE POLICY "Enable insert for users based on user_id" ON public.history FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Trigger Function to create a profile on new user signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email)
+  VALUES (NEW.id, NEW.email);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to call the function
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
