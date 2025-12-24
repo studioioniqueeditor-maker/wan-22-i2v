@@ -112,6 +112,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            position: relative; /* Ensure this is the positioning context */
+            overflow: hidden; /* contain child absolute elements */
         }
         .drop-zone:hover {
             border-color: var(--accent-blue);
@@ -126,6 +128,8 @@
             height: 100%;
             opacity: 0;
             cursor: pointer;
+            z-index: 5; /* Ensure it stays above text/icon but below prompts if overlapping (though it shouldn't) */
+            display: block; /* Force block layout */
         }
         .drop-zone-text {
             pointer-events: none;
