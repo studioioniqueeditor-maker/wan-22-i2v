@@ -1,4 +1,4 @@
-# Vivid Flow API Documentation (v1.0)
+# Vivid Flow API Documentation (v1.1)
 
 Welcome to the Vivid Flow API! This guide provides everything you need to integrate our powerful video generation capabilities into your own applications.
 
@@ -26,19 +26,39 @@ Starts a new video generation job. This endpoint is asynchronous; it returns a j
 *   **Method:** `POST`
 *   **Content-Type:** `multipart/form-data`
 
-**Parameters:**
+### **Parameters (General)**
 
 | Parameter | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `image` | File | Yes | The source image file to animate. |
 | `prompt` | String | Yes | A creative description of the desired motion. |
 | `model` | String | No | The generation model. Either `wan2.1` (default) or `veo3.1`. |
-| `negative_prompt` | String | No | A description of what to avoid in the video. |
-| `cfg` | Float | No | Motion Guidance scale. `1.0` to `20.0`. Default: `7.5`. |
-| `duration_seconds` | Integer | No | The length of the video in seconds. (e.g., `4`, `6`, `8`). |
-| `camera_motion` | String | No | (Veo 3.1 Only) Describes camera movement (e.g., "Dolly (In)"). |
-| `subject_animation` | String | No | (Veo 3.1 Only) Describes subject motion. |
-| `environmental_animation` | String | No | (Veo 3.1 Only) Describes environmental effects. |
+
+### **Parameters (Wan 2.1)**
+
+| Parameter | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `negative_prompt` | String | `""` | A description of what to avoid in the video. |
+| `cfg` | Float | `7.5` | Motion Guidance scale. `1.0` to `20.0`. |
+| `width` | Integer | `1280`| The width of the output video. |
+| `height` | Integer | `720` | The height of the output video. |
+| `length`| Integer | `81` | The number of frames in the video. |
+| `steps` | Integer | `30` | The number of diffusion steps. |
+| `seed` | Integer | `42` | The random seed for generation. |
+
+### **Parameters (Veo 3.1)**
+
+| Parameter | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `duration_seconds`| Integer | `4` | The length of the video in seconds. (e.g., `4`, `6`, `8`). |
+| `resolution` | String | `720p` | The video resolution (`720p` or `1080p`). |
+| `camera_motion`| String | `None`| Describes camera movement (e.g., "Dolly (In)"). |
+| `subject_animation`| String | `None`| Describes subject motion. |
+| `environmental_animation`| String | `None`| Describes environmental effects. |
+| `person_generation`| String | `allow_adult`| Policy for generating people (`allow_adult`, `allow_all`, `deny`). |
+| `generate_audio`| Boolean | `false`| Whether to generate audio for the video. |
+| `enhance_prompt`| Boolean | `false`| Whether to use Google's prompt enhancement. |
+
 
 **Example Request (`curl`):**
 
@@ -48,6 +68,7 @@ curl -X POST \
   -F "image=@/path/to/your/image.png" \
   -F "prompt=A cinematic shot of a robot playing chess" \
   -F "model=veo3.1" \
+  -F "duration_seconds=8" \
   https://your-app-domain.com/api/v1/generate
 ```
 
