@@ -105,10 +105,11 @@ def test_timing_metrics_in_response(client):
         assert kwargs['video_url'] == "https://gcs-url/video.mp4"
         assert kwargs['metrics']['spin_up_time'] == 2.5
         assert kwargs['metrics']['generation_time'] == 10.0
+
 def test_generate_video_uploads_to_gcs(client):
     with patch('web_app.GenerateVideoClient') as mock_client_cls, \
-         patch.dict('os.environ', {'RUNPOD_API_KEY': 'test_key', 'RUNPOD_ENDPOINT_ID': 'test_id', 'GCS_BUCKET_NAME': 'test-bucket', 'MOCK_MODE': 'false'}), \
          patch('web_app.StorageService') as mock_storage_cls, \
+         patch.dict('os.environ', {'RUNPOD_API_KEY': 'test_key', 'RUNPOD_ENDPOINT_ID': 'test_id', 'GCS_BUCKET_NAME': 'test-bucket', 'MOCK_MODE': 'false'}), \
          patch('web_app.render_template') as mock_render_template: # Mock render_template
         
         mock_instance = mock_client_cls.return_value
@@ -146,3 +147,27 @@ def test_user_login_sets_secure_session_cookie(client):
         assert 'session' in response.headers.get('Set-Cookie', '')
         assert 'HttpOnly' in response.headers.get('Set-Cookie', '') # Should be HttpOnly by default with Flask
         assert 'Secure' in response.headers.get('Set-Cookie', '') # Requires HTTPS, but Flask will set it if app.config['SESSION_COOKIE_SECURE'] is True
+
+def test_generate_video_missing_image(client):
+    response = client.post('/generate', data={'prompt': 'test'})
+    assert response.status_code == 200
+    assert b'No image uploaded' in response.data
+
+def test_generate_video_empty_filename(client):
+    # Use BytesIO for the image upload with an empty filename
+    mock_image_file = MockFile(b'fake image data', name='')
+    response = client.post('/generate', data={'image': (mock_image_file, ''), 'prompt': 'test'})
+    assert response.status_code == 200
+    assert b'No selected file' in response.data
+
+def test_generate_video_invalid_cfg(client):
+    mock_image_file = MockFile(b'fake image data', name='test_image.jpg')
+    response = client.post('/generate', data={
+        'image': (mock_image_file, mock_image_file.name),
+        'prompt': 'test',
+        'cfg': 'invalid'
+    })
+    assert response.status_code == 200
+    # Check that CFG defaults to 7.5 when invalid input is provided
+    assert b'Motion Guidance (CFG)' in response.data
+    assert b'7.5' in response.data # This might need more precise parsing if default display is a badge
