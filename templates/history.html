@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History - Wan2.1 Video Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #F5F5F7; font-family: 'Inter', sans-serif; padding: 2rem; }
+        .main-card { background: white; border-radius: 20px; padding: 2.5rem; max-width: 1000px; margin: auto; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+        h1 { font-weight: 700; }
+        .back-link { text-decoration: none; color: #0071E3; margin-bottom: 1rem; display: inline-block; font-weight: 500; }
+        .history-item { border-bottom: 1px solid #F0F0F0; padding: 1.5rem 0; }
+        .history-item:last-child { border-bottom: none; }
+        .vid-thumb { width: 160px; aspect-ratio: 16/9; background: #111; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+    <div class="main-card">
+        <a href="/" class="back-link">&larr; Back to Generator</a>
+        <h1 class="mb-4">Generation History</h1>
+        
+        <div id="history-container">
+            <p class="text-center text-muted py-5">Loading history...</p>
+        </div>
+    </div>
+
+    <script>
+        async function fetchHistory() {
+            try {
+                const response = await fetch('/api/history');
+                const data = await response.json();
+                const container = document.getElementById('history-container');
+                
+                if (Array.isArray(data) && data.length > 0) {
+                    container.innerHTML = '';
+                    data.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'history-item d-flex gap-4';
+                        div.innerHTML = `
+                            <div class="vid-thumb flex-shrink-0">
+                                <video muted loop onmouseover="this.play()" onmouseout="this.pause()" style="width: 100%; height: 100%; object-fit: cover;">
+                                    <source src="${item.video_url}" type="video/mp4">
+                                </video>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="mb-0 fs-6 fw-bold">ID: ${item.id.substring(0, 8)}</h5>
+                                    <span class="text-secondary small">${item.timestamp}</span>
+                                </div>
+                                <p class="text-muted small mb-3" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                    ${item.prompt}
+                                </p>
+                                <div class="d-flex gap-2">
+                                    <a href="${item.video_url}" download class="btn btn-sm btn-outline-primary rounded-pill px-3">Download</a>
+                                    <a href="${item.video_url}" target="_blank" class="btn btn-sm btn-light rounded-pill px-3">View Full</a>
+                                </div>
+                            </div>
+                        `;
+                        container.appendChild(div);
+                    });
+                } else {
+                    container.innerHTML = '<div class="alert alert-light text-center py-5">No generations yet. Start creating!</div>';
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('history-container').innerHTML = '<div class="alert alert-danger">Failed to load history.</div>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchHistory);
+    </script>
+</body>
+</html>

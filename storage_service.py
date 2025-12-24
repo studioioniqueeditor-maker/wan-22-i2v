@@ -12,12 +12,22 @@ class StorageService:
         self.bucket = self.client.bucket(self.bucket_name)
 
     def upload_file(self, source_file_name, destination_blob_name):
-        """Uploads a file to the bucket."""
+        """Uploads a file to the bucket and returns a signed URL."""
         blob = self.bucket.blob(destination_blob_name)
         
         blob.upload_from_filename(source_file_name)
         
-        # For this prototype, we'll assume the bucket is public or we return the public URL.
-        # If the bucket is not public, we might need to generate a signed URL.
-        # But `blob.public_url` is a standard property.
-        return blob.public_url
+        # Generate a signed URL valid for 1 hour
+        import datetime
+        url = blob.generate_signed_url(
+            version="v4",
+            expiration=datetime.timedelta(minutes=60),
+            method="GET"
+        )
+        return url
+
+    def upload_file_get_uri(self, source_file_name, destination_blob_name):
+        """Uploads a file to the bucket and returns the gs:// URI."""
+        blob = self.bucket.blob(destination_blob_name)
+        blob.upload_from_filename(source_file_name)
+        return f"gs://{self.bucket_name}/{destination_blob_name}"

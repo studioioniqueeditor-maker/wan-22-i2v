@@ -6,7 +6,11 @@ beautifulsoup4
 pytest-cov
 groq
 google-cloud-storage
+google-cloud-aiplatform
+google-genai
 supabase
 supabase
 Flask-Bcrypt
 Flask-Limiter
+Flask-Cors
+Pillow

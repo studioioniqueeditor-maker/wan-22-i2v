@@ -10,7 +10,7 @@
 ## Phase 2: Groq Prompt Enhancement Integration
 - [x] Task: Add `groq` to requirements.txt and install. [743b507]
 - [x] Task: Implement a `PromptEnhancer` class in a new module `prompt_enhancer.py` using Groq API. [fa58d57]
-- [ ] Task: Create unit tests for `PromptEnhancer`.
+- [x] Task: Create unit tests for `PromptEnhancer`.
 - [x] Task: Add a `/enhance_prompt` route to `web_app.py`. [7fa0051]
 - [x] Task: Implement "Enhance Prompt" button in `index.html` with AJAX/Fetch integration. [ef39560]
 - [x] Task: Add visual feedback (loader/glow) while the prompt is being enhanced. [5235f0c]

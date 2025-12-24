@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wan2.1 Video Generator</title>
+    <title>Vivid Flow</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
         :root {
-            /* VividFlow Light Theme */
             --bg-color: #F5F5F7;
             --card-bg: #FFFFFF;
             --text-primary: #1D1D1F;
@@ -19,419 +19,577 @@
             --accent-black: #000000;
             --border-color: #D2D2D7;
             --input-bg: #F5F5F7;
-            --drop-zone-bg: #FAFAFA;
-            --drop-zone-border: #D2D2D7;
-            
-            /* Spacing & Radius */
-            --radius-lg: 20px;
             --radius-md: 12px;
-            --radius-sm: 8px;
-            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
         }
 
         body { 
-            background-color: var(--bg-color);
+            background-color: var(--card-bg);
             color: var(--text-primary);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', sans-serif;
             height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
+            width: 100vw;
+            margin: 0;
             overflow: hidden;
         }
 
-        .main-card {
-            background: var(--card-bg);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-md);
-            padding: 2.5rem;
-            width: 100%;
-            max-width: 1400px;
-            height: calc(100vh - 4rem);
-            margin: auto;
+        .app-wrapper {
             display: flex;
             flex-direction: column;
+            height: 100vh;
+            padding: 1.5rem 2rem;
         }
 
-        /* Typography */
-        h1 { font-weight: 700; font-size: 1.5rem; letter-spacing: -0.02em; }
+        h1 { font-weight: 700; font-size: 1.4rem; letter-spacing: -0.03em; }
+        
         .form-label { 
             color: var(--text-secondary); 
-            font-weight: 500; 
-            font-size: 0.85rem; 
-            margin-bottom: 0.4rem;
+            font-weight: 600; 
+            font-size: 0.7rem; 
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
         }
         
-        /* Inputs */
         .form-control, .form-select {
             background-color: var(--input-bg);
             border: 1px solid transparent;
             border-radius: var(--radius-md);
-            padding: 0.75rem 1rem;
-            color: var(--text-primary);
-            font-size: 0.9rem;
+            padding: 0.5rem 0.8rem;
+            font-size: 0.85rem;
             transition: all 0.2s ease;
         }
         .form-control:focus, .form-select:focus {
             background-color: #FFFFFF;
             border-color: var(--accent-blue);
-            box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15);
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
         }
-        .form-control::placeholder { color: #BFBFBF; }
 
-        /* Buttons */
         .btn-primary {
             background-color: var(--accent-black);
             border: none;
-            border-radius: 100px; /* Pill shape */
-            padding: 0.75rem 2rem;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .btn-primary:hover {
-            background-color: #333333;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-        
-        /* Drop Zone */
-        .drop-zone {
-            border: 2px dashed #E5E5E5;
-            border-radius: var(--radius-lg);
-            background-color: var(--drop-zone-bg);
-            padding: 2rem;
-            text-align: center;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            color: var(--text-secondary);
-            height: 140px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative; /* Ensure this is the positioning context */
-            overflow: hidden; /* contain child absolute elements */
-        }
-        .drop-zone:hover {
-            border-color: var(--accent-blue);
-            background-color: #F0F8FF;
-            color: var(--accent-blue);
-        }
-        .drop-zone-input {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
-            z-index: 5; /* Ensure it stays above text/icon but below prompts if overlapping (though it shouldn't) */
-            display: block; /* Force block layout */
-        }
-        .drop-zone-text {
-            pointer-events: none;
-            color: #aaa;
+            border-radius: 100px;
+            padding: 0.8rem 2rem;
+            font-weight: 700;
+            font-size: 0.85rem;
         }
 
-        /* Prompt Wrapper */
-        .prompt-wrapper {
-            position: relative;
-        }
-        #enhance-btn {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background: white;
-            border: 1px solid #E5E5E5;
-            font-size: 0.75rem;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-            z-index: 10;
-        }
-        #enhance-btn:hover {
-            background: #F5F5F7;
-            border-color: #D2D2D7;
-        }
-
-        /* Slider */
-        .form-range::-webkit-slider-thumb {
-            background: var(--accent-blue);
-        }
-        .badge-value {
-            background: var(--input-bg);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 600;
-            font-size: 0.8rem;
-        }
-
-        #loading { display: none; }
-        
-        /* Animations */
-        @keyframes pulse-glow {
-            0% { box-shadow: 0 0 0 0 rgba(0, 113, 227, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(0, 113, 227, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 113, 227, 0); }
-        }
-        .loading-glow { animation: pulse-glow 2s infinite; }
-        .enhancing { border-color: var(--accent-blue) !important; }
-
-        /* Textarea Pulse */
-        @keyframes text-pulse {
-            0% { border-color: var(--glass-border); }
-            50% { border-color: var(--accent-blue); box-shadow: 0 0 10px rgba(0, 113, 227, 0.3); }
-            100% { border-color: var(--glass-border); }
-        }
-
-        /* Preview Area */
+        /* Preview Container */
         .preview-container {
             width: 100%;
             aspect-ratio: 16/9;
-            background: #111;
-            border-radius: var(--radius-lg);
+            background: #F2F2F7;
+            border-radius: var(--radius-md);
             overflow: hidden;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 1px solid var(--border-color);
+        }
+        
+        .drop-zone-content { text-align: center; color: var(--text-secondary); z-index: 5; }
+        .drop-zone-input {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0; cursor: pointer; z-index: 10;
+        }
+        .preview-img {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: contain;
+            display: none;
+            z-index: 6;
+            background: #000;
         }
 
-        /* Scrollable areas */
-        .col-scroll {
-            overflow-y: auto;
-            max-height: 100%;
-            padding-right: 10px;
+        .toggle-view-btn {
+            /* Legacy style replaced by .view-controls button */
+            display: none;
         }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #D2D2D7; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #86868B; }
+
+        /* Auto-Enhance Button */
+        .enhance-toggle-card {
+            background: var(--input-bg);
+            border-radius: 10px;
+            padding: 0.5rem 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+        }
+        .enhance-toggle-card .title { font-size: 0.75rem; font-weight: 700; }
+
+        /* Enhance Button */
+        .prompt-wrapper { position: relative; }
+        #enhance-btn {
+            position: absolute; 
+            top: 50%; 
+            right: 8px; 
+            transform: translateY(-50%);
+            z-index: 15;
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 4px 10px;
+        }
+
+        /* Animations */
+        @keyframes enhance-glow {
+            0% { box-shadow: 0 0 0 0 rgba(0, 113, 227, 0.4); }
+            50% { box-shadow: 0 0 15px 2px rgba(0, 113, 227, 0.2); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 113, 227, 0.4); }
+        }
+        .enhancing { animation: enhance-glow 1.5s infinite; border-color: var(--accent-blue) !important; }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+        .loading-scan {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(to right, transparent, var(--accent-blue), transparent);
+            animation: scanline 2s linear infinite;
+            z-index: 35;
+        }
+
+        /* Layout */
+        .content-row { height: calc(100vh - 100px); }
+        .col-scroll {
+            height: 100%;
+            overflow-y: auto;
+            padding-right: 12px;
+            scrollbar-width: none;
+        }
+        .col-scroll::-webkit-scrollbar { display: none; }
+
+        #loading {
+            position: absolute;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+            color: white;
+            backdrop-filter: blur(8px);
+        }
+
+        .history-card {
+            background: #F9F9F9;
+            border-radius: 10px;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            border: 1px solid #EEE;
+        }
+        .history-card:hover { border-color: var(--accent-blue); }
+
+        .badge-pro {
+            background: var(--accent-black);
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 800;
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            margin-left: 0.4rem;
+        }
+        
+        .mb-3 { margin-bottom: 0.75rem !important; }
+
+        .btn-white {
+            background-color: #FFFFFF;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        .btn-white:hover {
+            background-color: #F5F5F7;
+            color: var(--text-primary);
+        }
+        
+        #reset-btn {
+            width: 140px;
+        }
+        
+        #reset-btn:hover {
+            background-color: #e9ecef;
+            color: #000;
+        }
     </style>
 </head>
 <body>
-    <div class="main-card">
+    <div class="app-wrapper">
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4 flex-shrink-0">
-            <div>
-                <h1 class="mb-0">Wan2.1 Video Generator</h1>
-                <p class="text-secondary mb-0" style="font-size: 0.9rem;">Transform static images into cinematic video loops</p>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">v2.1 Pro</span>
+            <h1 class="mb-0">Vivid Flow<span class="badge-pro">PRO</span></h1>
+            <div class="dropdown">
+                <button class="btn btn-light border rounded-pill dropdown-toggle px-3 py-1 d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                    <span class="small fw-semibold">{{ user_email }}</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2">
+                    <li><a class="dropdown-item py-2 small" href="/account">Settings</a></li>
+                    <li><a class="dropdown-item py-2 small" href="/history">History</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><form action="/logout" method="POST" class="m-0"><button type="submit" class="dropdown-item py-2 small text-danger">Log Out</button></form></li>
+                </ul>
             </div>
         </div>
 
-        <div class="row g-5 h-100 overflow-hidden">
-            <!-- Left Column: Controls -->
-            <div class="col-lg-7 h-100 col-scroll">
-                <form action="/generate" method="post" enctype="multipart/form-data" id="gen-form">
-                    <!-- Drop Zone -->
-                    <div class="mb-3">
-                        <label for="image" class="form-label">Input Image</label>
-                        <div class="drop-zone">
-                            <div class="drop-zone-text">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#D2D2D7" class="bi bi-cloud-upload mb-2" viewBox="0 0 16 16">
-                                    <path fill-rule="evenodd" d="M4.406 1.342A5.53 5.53 0 0 1 8 0c2.69 0 4.923 2 5.166 4.579C14.758 4.804 16 6.137 16 7.773 16 9.569 14.502 11 12.687 11H10a.5.5 0 0 1 0-1h2.688C13.979 10 15 8.988 15 7.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 2.825 10.328 1 8 1a4.53 4.53 0 0 0-2.941 1.1c-.757.652-1.153 1.438-1.153 2.055v.448l-.445.049C2.064 4.805 1 5.952 1 7.318 1 8.785 2.23 10 3.781 10H6a.5.5 0 0 1 0 1H3.781C1.708 11 0 9.366 0 7.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383z"/>
-                                    <path fill-rule="evenodd" d="M7.646 4.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V14.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3z"/>
-                                </svg>
-                                <p class="mb-0" style="font-size: 0.9rem;">Drag & Drop or Click to Upload</p>
-                            </div>
-                            <img id="image-preview" src="#" alt="Image Preview" style="display: none; max-width: 100%; max-height: 100%; border-radius: 8px; object-fit: contain;">
-                            <input class="drop-zone-input" type="file" id="image" name="image" accept="image/*" required onchange="updateFileName(this)">
+        <div class="row g-4 content-row">
+            <!-- Left: Controls -->
+            <div class="col-lg-5 h-100">
+                <div class="col-scroll">
+                    <form id="gen-form">
+                        <div class="mb-3">
+                            <label class="form-label">Model Selection</label>
+                            <select class="form-select" id="model" name="model">
+                                <option value="wan2.1">Wan 2.1 (RunPod)</option>
+                                <option value="veo3.1">Google Veo 3.1 (Vertex AI)</option>
+                            </select>
                         </div>
-                        <div id="file-name" class="mt-1 text-muted small text-center"></div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="prompt" class="form-label">Prompt</label>
-                        <div class="prompt-wrapper">
-                            <textarea class="form-control" id="prompt" name="prompt" rows="3" required placeholder="Describe your video...">A cinematic shot of...</textarea>
-                            <button type="button" id="enhance-btn" class="btn btn-sm btn-light rounded-pill">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-stars me-1" viewBox="0 0 16 16">
-                                    <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.882 1.882l1.937.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.882 1.882l-.645 1.937c-.11.33-.576.33-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.882-1.882l-1.937-.645c-.33-.11-.33-.576 0-.686l1.937-.645a2.89 2.89 0 0 0 1.882-1.882l.645-1.937zM14.083 2.5a.512.512 0 0 1 .657.657l-.07.21a1.03 1.03 0 0 0 .67.67l.21.07a.512.512 0 0 1 0 .973l-.21.07a1.03 1.03 0 0 0-.67.67l-.07.21a.512.512 0 0 1-.973 0l-.07-.21a1.03 1.03 0 0 0-.67-.67l-.21-.07a.512.512 0 0 1 0-.973l.21-.07a1.03 1.03 0 0 0 .67-.67l.07-.21zM2.5 14.083a.512.512 0 0 1 .657.657l-.07.21a1.03 1.03 0 0 0 .67.67l.21.07a.512.512 0 0 1 0 .973l-.21.07a1.03 1.03 0 0 0-.67.67l-.07.21a.512.512 0 0 1-.973 0l-.07-.21a1.03 1.03 0 0 0-.67-.67l-.21-.07a.512.512 0 0 1 0-.973l.21-.07a1.03 1.03 0 0 0 .67-.67l.07-.21z"/></svg> Enhance
+
+                        <div class="mb-3">
+                            <label class="form-label">Creative Prompt</label>
+                            <div class="prompt-wrapper">
+                                <textarea class="form-control" id="prompt" name="prompt" rows="2" required style="padding-right: 85px;" placeholder="A cinematic shot of..."></textarea>
+                                <button type="button" id="enhance-btn" class="btn btn-sm btn-white border rounded-pill shadow-sm" style="display: none;">
+                                    ✨ ENHANCE
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Veo Options -->
+                        <div id="veo-options" style="display: none;">
+                            <input type="hidden" name="camera_motion" id="final_camera_motion">
+                            <input type="hidden" name="subject_animation" id="final_subject_animation">
+                            <input type="hidden" name="environmental_animation" id="final_environmental_animation">
+
+                            <div class="enhance-toggle-card">
+                                <div class="title">Auto-Enhance Prompt</div>
+                                <div class="form-check form-switch m-0">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="auto_enhance_toggle" name="auto_enhance" value="true">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Camera Movement</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <select class="form-select form-select-sm" id="camera_category">
+                                            <option value="None">None</option>
+                                            <option value="Dolly">Dolly</option><option value="Zoom">Zoom</option>
+                                            <option value="Pan">Pan</option><option value="Vertigo">Vertigo</option>
+                                            <option value="OverTheShoulder">OTS</option><option value="POV">POV</option>
+                                            <option value="Truck">Truck</option><option value="Tilt">Tilt</option>
+                                            <option value="Others">Others</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6" id="camera_sub_container" style="display: none;">
+                                        <select class="form-select form-select-sm" id="camera_sub_option"></select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Subject Motion</label>
+                                <select class="form-select form-select-sm mb-2" id="subject_animation_select">
+                                    <option value="None">None</option>
+                                    <option value="The subject's head turns slowly">Head turn</option>
+                                    <option value="The subject blinks slowly">Blinks</option>
+                                    <option value="The subject's hair and clothes flutter gently in the wind">Wind flutter</option>
+                                    <option value="A subtle smile appears on the subject's face">Subtle smile</option>
+                                    <option value="Other">Other...</option>
+                                </select>
+                                <input type="text" class="form-control form-control-sm" id="subject_animation_custom" placeholder="Describe motion..." style="display: none;">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Environment</label>
+                                <select class="form-select form-select-sm mb-2" id="environmental_animation_select">
+                                    <option value="None">None</option>
+                                    <option value="Light intensity increases subtly">Light pulse</option>
+                                    <option value="Fog rolls in slowly">Fog roll</option>
+                                    <option value="Rain starts to fall gently">Gentle rain</option>
+                                    <option value="Leaves rustle in the wind">Leaves rustle</option>
+                                    <option value="Light changes subtly">Light change</option>
+                                    <option value="Reflections move on water">Water movement</option>
+                                    <option value="Other">Other...</option>
+                                </select>
+                                <input type="text" class="form-control form-control-sm" id="environmental_animation_custom" placeholder="Describe environment..." style="display: none;">
+                            </div>
+                        </div>
+                        
+                        <div id="wan-options">
+                            <div class="mb-3">
+                                <label class="form-label">Negative Constraints</label>
+                                <textarea class="form-control" id="negative_prompt" name="negative_prompt" rows="2" placeholder="blurry, low quality..."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label d-flex justify-content-between">
+                                    Motion Scale <span id="cfg-value" class="text-primary fw-bold">7.5</span>
+                                </label>
+                                <input type="range" class="form-range" id="cfg" name="cfg" min="1.0" max="20.0" step="0.5" value="7.5" oninput="document.getElementById('cfg-value').textContent = this.value">
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-4">
+                            <div class="col-6">
+                                <label class="form-label">Resolution</label>
+                                <select class="form-select form-select-sm" name="resolution">
+                                    <option value="1080p">1080p</option>
+                                    <option value="720p" selected>720p</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Duration</label>
+                                <select class="form-select form-select-sm" name="duration" id="duration-select"></select>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1" id="generate-btn">
+                                CREATE VIDEO
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary px-4" id="reset-btn" title="Start New">
+                                ↺ NEW
                             </button>
                         </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="negative_prompt" class="form-label">Negative Prompt</label>
-                        <textarea class="form-control" id="negative_prompt" name="negative_prompt" rows="2" placeholder="What to avoid...">blurry, low quality, distorted</textarea>
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="cfg" class="form-label d-flex justify-content-between">
-                            Motion Guidance (CFG)
-                            <span id="cfg-value" class="badge-value">7.5</span>
-                        </label>
-                        <input type="range" class="form-range" id="cfg" name="cfg" min="1.0" max="20.0" step="0.5" value="7.5" oninput="document.getElementById('cfg-value').textContent = this.value">
-                    </div>
-
-                    <div class="d-flex gap-4 mb-4">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="true" id="loop" name="loop" checked>
-                            <label class="form-check-label" for="loop" style="font-size: 0.9rem;">Loop video</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="true" id="stabilize" name="stabilize">
-                            <label class="form-check-label" for="stabilize" style="font-size: 0.9rem;">Stabilize motion</label>
-                        </div>
-                    </div>
-
-                    <div class="row g-3 mb-4">
-                        <div class="col-4">
-                            <select class="form-select" name="resolution">
-                                <option value="1080p">1080p</option>
-                                <option value="720p">720p</option>
-                            </select>
-                        </div>
-                        <div class="col-4">
-                            <select class="form-select" name="duration">
-                                <option value="5s">5s</option>
-                                <option value="3s">3s</option>
-                            </select>
-                        </div>
-                        <div class="col-4">
-                            <select class="form-select" name="fps">
-                                <option value="24">24 FPS</option>
-                                <option value="30">30 FPS</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary w-100">
-                        <span class="me-2">⚡</span> Generate Video
-                    </button>
-                </form>
+                    </form>
+                </div>
             </div>
 
-            <!-- Right Column: Results & History -->
-            <div class="col-lg-5 h-100 d-flex flex-column col-scroll">
-                <!-- Preview Area -->
-                <div class="preview-container mb-3">
-                    {% if video_url %}
-                        <video controls width="100%" height="100%" style="object-fit: contain;" autoplay loop>
-                            <source src="{{ video_url }}" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    {% else %}
-                        <div class="text-center text-muted">
-                            <div class="mb-2" style="font-size: 2.5rem; opacity: 0.3;">▶️</div>
-                            <p class="mb-0 small">Preview will appear here</p>
-                        </div>
-                    {% endif %}
-                </div>
-
-                <!-- Meta Info Row -->
-                <div class="d-flex justify-content-between text-secondary mb-4 px-1" style="font-size: 0.8rem;">
-                    <span>Estimated time: ~25s</span>
-                    <span>Credits: 420 remaining</span>
-                </div>
-
-                <div id="loading" class="text-center mb-4">
-                    <div class="spinner-border loading-glow text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
+            <!-- Right: Preview -->
+            <div class="col-lg-7 h-100 d-flex flex-column">
+                <div class="preview-container mb-4" id="main-preview-area">
+                    <div id="loading">
+                        <div class="loading-scan"></div>
+                        <div class="spinner-grow text-white mb-3" style="width: 2.5rem; height: 2.5rem;"></div>
+                        <div class="fw-bold fs-6">Generating Motion...</div>
+                        <div class="small opacity-75 mt-2" id="timer-display">Wait time: ~1 min</div>
                     </div>
-                    <h6 class="mt-3">Generating Video...</h6>
+                    
+                    <!-- Error Toast overlay -->
+                    <div id="error-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 28; align-items: center; justify-content: center; flex-direction: column; padding: 2rem; text-align: center;">
+                        <div class="text-danger mb-3" style="font-size: 2rem;">⚠️</div>
+                        <h5 class="fw-bold text-danger mb-2">Generation Failed</h5>
+                        <p class="small text-secondary mb-4" id="error-message">Unknown error occurred.</p>
+                        <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-4" onclick="document.getElementById('error-overlay').style.display='none'">Dismiss</button>
+                    </div>
+
+                    <div class="drop-zone-content" id="drop-zone-ui">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-plus-circle opacity-50 mb-3" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+                        </svg>
+                        <p class="mb-0 fw-bold small">Source Image</p>
+                        <p class="small opacity-50" style="font-size: 0.65rem;">Drop image or click to start</p>
+                    </div>
+                    <input type="file" id="image-input" name="image" accept="image/*" class="drop-zone-input" form="gen-form">
+                    
+                    <img id="preview-image" class="preview-img" src="#" alt="Preview">
+                    <video id="video-output" controls width="100%" height="100%" style="object-fit: contain; z-index: 20; position: absolute; background:#000; display:none;" autoplay loop>
+                        <source src="" type="video/mp4">
+                    </video>
+                    
+                    <div class="view-controls" style="position: absolute; top: 12px; right: 12px; z-index: 25; display: none; gap: 8px;">
+                         <button id="show-image-btn" class="btn btn-sm btn-white shadow-sm border rounded-pill fw-bold" style="font-size: 0.75rem;">
+                            👁️ View Input
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Recent Generations -->
-                <h5 class="mb-3" style="font-size: 1rem;">Recent Generations</h5>
-                <div class="recent-list">
-                    <!-- 5 History Items -->
-                    {% for i in range(5) %}
-                    <div class="card border-0 mb-2" style="background: #FAFAFA; border-radius: var(--radius-md);">
-                        <div class="card-body p-2 d-flex align-items-center">
-                            <div style="width: 70px; height: 50px; background: #E5E5E5; border-radius: 6px; margin-right: 12px; background-image: url('https://placehold.co/70x50/ccc/fff?text=VID'); background-size: cover;"></div>
-                            <div class="flex-grow-1" style="min-width: 0;">
-                                <h6 class="mb-0 text-truncate" style="font-size: 0.9rem;">Cyberpunk city street...</h6>
-                                <small class="text-secondary" style="font-size: 0.75rem;">5s • 1080p • 2m ago</small>
-                            </div>
-                            <button class="btn btn-sm btn-white border rounded-circle flex-shrink-0" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: white;">↻</button>
-                        </div>
-                    </div>
-                    {% endfor %}
+                <div class="flex-grow-1 overflow-hidden d-flex flex-column">
+                    <h6 class="form-label mb-2">History</h6>
+                    <div id="recent-list" class="col-scroll"></div>
                 </div>
             </div>
         </div>
-        
-        {% if error %}
-        <div class="alert alert-danger mt-4" role="alert">
-            {{ error }}
-        </div>
-        {% endif %}
     </div>
 
     <script>
-        document.getElementById('gen-form').onsubmit = function() {
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('gen-form').style.opacity = '0.5';
-            document.getElementById('gen-form').style.pointerEvents = 'none';
+        const cameraOptions = {
+            "Dolly": ["Dolly (In)", "Dolly (Out)"], "Zoom": ["Zoom (In)", "Zoom (Out)"],
+            "Pan": ["Pan (left)", "Pan (right)", "Whip Pan"], "Vertigo": ["Vertigo Effect (Dolly Zoom)"],
+            "OverTheShoulder": ["Over-the-Shoulder Shot"], "POV": ["POV Shot"],
+            "Truck": ["Truck (Left)", "Truck (Right)"], "Tilt": ["Tilt (up)", "Tilt (down)"],
+            "Others": ["Eye-Level", "Low-Angle", "High-Angle", "Bird's-Eye", "Top-Down", "Dutch Angle", "Close-Up", "Medium Shot", "Full Shot", "Wide Shot", "Static Shot", "Handheld", "Shaky Cam", "Drone Shot"]
         };
 
-        document.getElementById('enhance-btn').onclick = async function() {
-            const promptArea = document.getElementById('prompt');
-            const originalPrompt = promptArea.value;
-            const btn = this;
-
-            if (!originalPrompt || originalPrompt === 'A cinematic shot of...') {
-                alert('Please enter a short prompt first.');
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ✨ Enhancing...';
-            promptArea.classList.add('enhancing');
-
-            try {
-                const formData = new FormData();
-                formData.append('prompt', originalPrompt);
-
-                const response = await fetch('/enhance_prompt', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-                if (data.enhanced_prompt) {
-                    promptArea.value = data.enhanced_prompt;
-                } else if (data.error) {
-                    alert('Error: ' + data.error);
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Failed to enhance prompt.');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-stars me-1" viewBox="0 0 16 16"><path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.882 1.882l1.937.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.882 1.882l-.645 1.937c-.11.33-.576.33-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.882-1.882l-1.937-.645c-.33-.11-.33-.576 0-.686l1.937-.645a2.89 2.89 0 0 0 1.882-1.882l.645-1.937zM14.083 2.5a.512.512 0 0 1 .657.657l-.07.21a1.03 1.03 0 0 0 .67.67l.21.07a.512.512 0 0 1 0 .973l-.21.07a1.03 1.03 0 0 0-.67.67l-.07.21a.512.512 0 0 1-.973 0l-.07-.21a1.03 1.03 0 0 0-.67-.67l-.21-.07a.512.512 0 0 1 0-.973l.21-.07a1.03 1.03 0 0 0 .67-.67l.07-.21zM2.5 14.083a.512.512 0 0 1 .657.657l-.07.21a1.03 1.03 0 0 0 .67.67l.21.07a.512.512 0 0 1 0 .973l-.21.07a1.03 1.03 0 0 0 .67-.67l-.07.21a.512.512 0 0 1-.973 0l-.07-.21a1.03 1.03 0 0 0-.67-.67l-.21-.07a.512.512 0 0 1 0-.973l.21-.07a1.03 1.03 0 0 0 .67-.67l.07-.21z"/></svg> ✨ Enhance Prompt';
-                promptArea.classList.remove('enhancing');
-            }
+        const els = {
+            model: document.getElementById('model'),
+            veo: document.getElementById('veo-options'),
+            wan: document.getElementById('wan-options'),
+            form: document.getElementById('gen-form'),
+            load: document.getElementById('loading'),
+            enh: document.getElementById('enhance-btn'),
+            prom: document.getElementById('prompt'),
+            hist: document.getElementById('recent-list'),
+            dur: document.getElementById('duration-select'),
+            imgIn: document.getElementById('image-input'),
+            imgPre: document.getElementById('preview-image'),
+            dropUI: document.getElementById('drop-zone-ui'),
+            vid: document.getElementById('video-output'),
+            tog: document.getElementById('show-image-btn'),
+            viewCtrls: document.querySelector('.view-controls'),
+            reset: document.getElementById('reset-btn'),
+            errOver: document.getElementById('error-overlay'),
+            errMsg: document.getElementById('error-message'),
+            camCat: document.getElementById('camera_category'),
+            camSub: document.getElementById('camera_sub_option'),
+            camSubC: document.getElementById('camera_sub_container'),
+            fCam: document.getElementById('final_camera_motion'),
+            sbS: document.getElementById('subject_animation_select'),
+            sbC: document.getElementById('subject_animation_custom'),
+            fSb: document.getElementById('final_subject_animation'),
+            evS: document.getElementById('environmental_animation_select'),
+            evC: document.getElementById('environmental_animation_custom'),
+            fEv: document.getElementById('final_environmental_animation'),
+            timer: document.getElementById('timer-display')
         };
 
-        function updateFileName(input) {
-            const file = input.files[0];
-            if (file) {
-                document.getElementById('file-name').textContent = file.name;
-                
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const preview = document.getElementById('image-preview');
-                    const text = document.querySelector('.drop-zone-text');
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                    text.style.display = 'none'; // Hide text when image is shown
-                }
-                reader.readAsDataURL(file);
-            } else {
-                document.getElementById('file-name').textContent = '';
-                document.getElementById('image-preview').style.display = 'none';
-                document.querySelector('.drop-zone-text').style.display = 'block';
-            }
+        // --- Init ---
+        const saved = localStorage.getItem('selectedModel') || 'wan2.1';
+        els.model.value = saved;
+
+        // Check for error from server-side render
+        {% if error %}
+        els.errMsg.textContent = "{{ error }}";
+        els.errOver.style.display = 'flex';
+        {% endif %}
+
+        function updateUI() {
+            const m = els.model.value;
+            localStorage.setItem('selectedModel', m);
+            els.veo.style.display = m === 'veo3.1' ? 'block' : 'none';
+            els.wan.style.display = m === 'wan2.1' ? 'block' : 'none';
+            els.timer.textContent = `Wait time: ${m === 'veo3.1' ? '~1 min' : '~5 mins'}`;
+            els.dur.innerHTML = (m === 'veo3.1' ? [4, 6, 8] : [5, 3]).map(o => `<option value="${o}" ${o==4||o==5?'selected':''}>${o}s</option>`).join('');
         }
+        els.model.addEventListener('change', updateUI);
+        updateUI();
+
+        // --- Select Logic ---
+        els.camCat.addEventListener('change', () => {
+            const cat = els.camCat.value; els.camSub.innerHTML = '';
+            if(cat === 'None') { els.camSubC.style.display='none'; els.fCam.value='None'; }
+            else { 
+                cameraOptions[cat].forEach(o => els.camSub.add(new Option(o,o)));
+                els.camSubC.style.display='block'; els.fCam.value=els.camSub.value;
+            }
+        });
+        els.camSub.addEventListener('change', () => els.fCam.value = els.camSub.value);
+
+        function bindCustom(s,c,f) {
+            const u = () => { if(s.value==='Other'){c.style.display='block'; f.value=c.value;}else{c.style.display='none'; f.value=s.value;} };
+            s.onchange = u; c.oninput = () => f.value = c.value; u();
+        }
+        bindCustom(els.sbS, els.sbC, els.fSb); bindCustom(els.evS, els.evC, els.fEv);
+
+        // --- Previews ---
+        els.imgIn.onchange = () => {
+            const f = els.imgIn.files[0];
+            if(f) {
+                const r = new FileReader();
+                r.onload = e => { 
+                    els.imgPre.src=e.target.result; 
+                    els.imgPre.style.display='block'; 
+                    els.dropUI.style.display='none'; 
+                    els.vid.style.display='none';
+                    els.viewCtrls.style.display='none';
+                    els.errOver.style.display='none';
+                };
+                r.readAsDataURL(f);
+            }
+        };
+
+        els.tog.onclick = () => {
+            const isVid = els.vid.style.display !== 'none';
+            els.vid.style.display = isVid ? 'none' : 'block';
+            els.imgPre.style.display = isVid ? 'block' : 'none';
+            els.tog.textContent = isVid ? '🎬 View Result' : '👁️ View Input';
+        };
+
+        els.reset.onclick = () => {
+            els.form.reset();
+            els.imgPre.src = '#';
+            els.imgPre.style.display = 'none';
+            els.vid.style.display = 'none';
+            els.vid.src = '';
+            els.dropUI.style.display = 'block';
+            els.viewCtrls.style.display = 'none';
+            els.prom.style.height = 'auto';
+            els.prom.rows = 2;
+            els.errOver.style.display = 'none';
+            updateUI(); // Reset dynamic fields
+        };
+
+        // --- Actions ---
+        els.form.onsubmit = async e => {
+            e.preventDefault(); 
+            els.load.style.display='flex';
+            els.errOver.style.display='none';
+            els.form.style.opacity='0.4'; els.form.style.pointerEvents='none';
+            const fd = new FormData(els.form);
+            try {
+                const res = await fetch('/generate', { 
+                    method:'POST', 
+                    body:fd,
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.message || 'Generation Error');
+                
+                // Update Video
+                els.vid.src = data.video_url;
+                els.vid.style.display = 'block';
+                els.imgPre.style.display = 'none';
+                els.viewCtrls.style.display = 'flex';
+                els.tog.textContent = '👁️ View Input';
+                
+                loadHistory(); // Refresh history list
+            } catch(err) { 
+                els.errMsg.textContent = err.message;
+                els.errOver.style.display = 'flex';
+            } finally {
+                els.load.style.display='none'; 
+                els.form.style.opacity='1'; 
+                els.form.style.pointerEvents='auto';
+            }
+        };
+
+        els.enh.onclick = async () => {
+            if(!els.prom.value) return alert('Enter prompt');
+            els.enh.disabled = true; els.prom.classList.add('enhancing');
+            const fd = new FormData(els.form);
+            try {
+                const res = await fetch('/enhance_prompt', { method:'POST', body:fd });
+                const d = await res.json(); 
+                if(d.enhanced_prompt) {
+                    els.prom.value = d.enhanced_prompt;
+                    els.prom.rows = 4; // Expand prompt box
+                }
+            } catch(e){} finally { els.enh.disabled=false; els.prom.classList.remove('enhancing'); }
+        };
+
+        async function loadHistory() {
+            try {
+                const res = await fetch('/api/history');
+                const data = await res.json();
+                if(!data || data.length === 0) {
+                    els.hist.innerHTML = '<div class="text-center opacity-30 py-5 small fw-bold">NO GENERATIONS YET</div>';
+                } else {
+                    els.hist.innerHTML = data.slice(0, 10).map(i => `
+                        <div class="history-card" onclick="window.location.href='${i.video_url}'">
+                            <div class="d-flex align-items-center gap-3">
+                                <div style="width:40px; height:24px; background:#000; border-radius:4px; overflow:hidden;">
+                                    <video muted style="width:100%; height:100%; object-fit:cover;"><source src="${i.video_url}"></video>
+                                </div>
+                                <div class="text-truncate small fw-medium" style="max-width:300px;">${i.prompt}</div>
+                            </div>
+                        </div>`).join('');
+                }
+            } catch(e){}
+        }
+        loadHistory();
     </script>
 </body>
 </html>

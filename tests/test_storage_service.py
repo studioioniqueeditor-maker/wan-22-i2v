@@ -18,8 +18,8 @@ def test_upload_file_success(service, mock_storage_client):
     mock_blob = MagicMock()
     service.bucket.blob.return_value = mock_blob
     
-    # Simple attribute setting
-    mock_blob.public_url = "https://storage.googleapis.com/test-bucket/test_video.mp4"
+    # Mock generate_signed_url
+    mock_blob.generate_signed_url.return_value = "https://storage.googleapis.com/test-bucket/test_video.mp4?signature=xyz"
     
     local_path = "test_video.mp4"
     destination_blob_name = "videos/test_video.mp4"
@@ -28,9 +28,10 @@ def test_upload_file_success(service, mock_storage_client):
     with patch('builtins.open', MagicMock()):
         url = service.upload_file(local_path, destination_blob_name)
         
-    assert url == "https://storage.googleapis.com/test-bucket/test_video.mp4"
+    assert url == "https://storage.googleapis.com/test-bucket/test_video.mp4?signature=xyz"
     service.bucket.blob.assert_called_with(destination_blob_name)
     mock_blob.upload_from_filename.assert_called_with(local_path)
+    mock_blob.generate_signed_url.assert_called_once()
 def test_init_missing_bucket_env():
     with patch.dict('os.environ', {}, clear=True):
         with pytest.raises(ValueError, match="GCS_BUCKET_NAME environment variable is required"):

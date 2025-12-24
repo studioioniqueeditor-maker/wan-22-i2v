@@ -2,8 +2,9 @@ import requests
 import base64
 import time
 import os
+from video_client_interface import IVideoClient
 
-class GenerateVideoClient:
+class WanVideoClient(IVideoClient):
     def __init__(self, runpod_endpoint_id, runpod_api_key):
         self.endpoint_id = runpod_endpoint_id
         self.api_key = runpod_api_key
@@ -13,7 +14,7 @@ class GenerateVideoClient:
             "Content-Type": "application/json"
         }
 
-    def create_video_from_image(self, image_path, prompt, negative_prompt="", width=1280, height=720, length=121, steps=30, seed=42, cfg=3.0):
+    def create_video_from_image(self, image_path, prompt, negative_prompt="", width=1280, height=720, length=121, steps=30, seed=42, cfg=3.0, **kwargs):
         print(f"Encoding image: {image_path}")
         try:
             with open(image_path, "rb") as image_file:

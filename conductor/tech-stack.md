@@ -12,7 +12,7 @@
 ## Infrastructure & Services
 *   **GPU Compute:** RunPod Serverless (Wan 2.1 I2V Model)
 *   **Environment Management:** `python-dotenv` (For secure handling of API keys and endpoint IDs)
-*   **Storage:** Local filesystem (Temporary uploads and output videos)
+*   **Storage:** Google Cloud Storage (GCS) for persistent video storage
 
 ## Planned Additions
 *   **Prompt Enhancement:** Groq API (Integration for fast LLM-based prompt expansion)

@@ -1,19 +1,27 @@
-# Wan 2.1 I2V Client & Web App
+# Vivid Flow - Wan 2.1 & Veo 3.1 I2V Client (v1.0.0)
 
-A Python-based toolkit for generating videos from images using the Wan 2.1 Image-to-Video model hosted on RunPod. This project includes both a command-line client for batch processing and a Flask-based web interface for easy interaction.
+A professional-grade toolkit and web interface for generating videos from images using the state-of-the-art **Wan 2.1** (via RunPod) and **Google Veo 3.1** (via Vertex AI) models. This project is the first production release of the VividFlow platform.
 
-## Features
+## Features (v1.0.0)
 
-- **Web Interface:** A user-friendly web app to upload images, set prompts, and generate videos.
-- **Batch Processing:** A Python script to automatically process an entire folder of images.
-- **Configurable Parameters:** Control over prompt, negative prompt, dimensions, frame length, steps, seed, and CFG scale.
-- **Robust Error Handling:** Includes polling for job status and automatic retries/timeouts.
+- **Dual Model Support:** Seamlessly switch between **Wan 2.1** (open-source) and **Google Veo 3.1** (enterprise).
+- **Modern Web Interface:**
+  - Glassmorphism-inspired UI with "Start New" functionality.
+  - Real-time previews and history tracking.
+  - Detailed parameter controls (Camera Motion, Subject Animation, Environmental Effects).
+- **Secure Authentication:** User registration and login powered by Supabase.
+- **Cloud Storage:** Automated video upload to Google Cloud Storage (GCS).
+- **Production Ready:** 
+  - Robust error handling and diagnostic reporting.
+  - Rate limiting and session management.
+  - Comprehensive logging and feedback.
 
 ## Prerequisites
 
-- Python 3.8+
-- A [RunPod](https://www.runpod.io/) account with an active Endpoint ID for the Wan 2.1 I2V model.
-- An API Key from RunPod.
+- Python 3.10+
+- **RunPod Account:** Active Endpoint for Wan 2.1.
+- **Google Cloud Platform:** Project with Vertex AI and Cloud Storage enabled.
+- **Supabase Account:** Project for authentication and database.
 
 ## Installation
 
@@ -23,7 +31,7 @@ A Python-based toolkit for generating videos from images using the Wan 2.1 Image
     cd wan-22-i2v
     ```
 
-2.  **Create and activate a virtual environment (recommended):**
+2.  **Create and activate a virtual environment:**
     ```bash
     python -m venv venv
     source venv/bin/activate  # On Windows: venv\Scripts\activate
@@ -36,88 +44,46 @@ A Python-based toolkit for generating videos from images using the Wan 2.1 Image
 
 ## Configuration
 
-1.  Create a `.env.client` file in the root directory:
+1.  **Environment Variables:**
+    Copy `.env.example` to `.env` and fill in your credentials:
     ```bash
-    touch .env.client
+    cp .env.example .env
     ```
+    
+    Required keys include:
+    - `RUNPOD_API_KEY`, `RUNPOD_ENDPOINT_ID` (for Wan 2.1)
+    - `GOOGLE_CLOUD_PROJECT`, `GCS_BUCKET_NAME` (for Veo 3.1 & Storage)
+    - `SUPABASE_URL`, `SUPABASE_KEY` (for Auth)
+    - `FLASK_SECRET_KEY`
 
-2.  Add your RunPod credentials to `.env.client`:
-    ```env
-    RUNPOD_API_KEY=your_runpod_api_key_here
-    RUNPOD_ENDPOINT_ID=your_endpoint_id_here
-    ```
-
-    *Note: `RUNPOD_ENDPOINT_ID` defaults to `3r0ibyzfx7y2bz` if not specified.*
+2.  **Google Cloud Credentials:**
+    Ensure your `gcs-key.json` (Service Account Key) is present in the root directory or set via `GOOGLE_APPLICATION_CREDENTIALS`.
 
 ## Usage
 
-### 1. Web Application
+### Web Application
 
-Start the Flask web server to generate videos via a browser interface.
+Start the Flask server:
 
 ```bash
 python web_app.py
 ```
 
-- Open your browser and navigate to `http://127.0.0.1:5000`.
-- Upload an image.
-- Enter a text prompt (e.g., "A cinematic shot of a futuristic city").
-- Click **Generate**.
-- The generated video will be displayed and saved to the `output/` directory.
+- Navigate to `http://127.0.0.1:5000`.
+- Log in or Register.
+- Select your Model (Wan 2.1 or Veo 3.1).
+- Upload an image and set your creative prompts.
+- Click **CREATE VIDEO**.
 
-### 2. Batch Processing (Script)
+## CI/CD & Deployment
 
-You can use the `GenerateVideoClient` class in your own scripts to process multiple images at once.
+This project is set up for automated deployment. 
 
-**Example Usage:**
-
-```python
-from generate_video_client import GenerateVideoClient
-import os
-from dotenv import load_dotenv
-
-load_dotenv(".env.client")
-
-client = GenerateVideoClient(
-    runpod_endpoint_id=os.getenv("RUNPOD_ENDPOINT_ID"),
-    runpod_api_key=os.getenv("RUNPOD_API_KEY")
-)
-
-# Process all images in the 'input_images' folder
-batch_result = client.batch_process_images(
-    image_folder_path="./input_images",
-    output_folder_path="./output_videos",
-    prompt="cinematic slow motion, high quality",
-    width=1280,
-    height=720
-)
-
-print(f"Completed: {batch_result['successful']} videos generated.")
-```
-
-## Project Structure
-
-```
-wan-22-i2v/
-├── generate_video_client.py  # Core logic for RunPod API interaction
-├── web_app.py                # Flask web application
-├── templates/
-│   └── index.html            # Frontend HTML template
-├── input_images/             # (Created by user) Directory for batch input
-├── output_videos/            # (Created by user) Directory for batch output
-├── output/                   # Directory for web app output
-├── requirements.txt          # Python dependencies
-├── product-design.md         # Product vision and roadmap
-└── .env.client               # Environment variables (not committed)
-```
-
-## Product Roadmap (VividFlow)
-
-This project is the foundational prototype for **VividFlow**, a planned high-end I2V platform. See `product-design.md` for the full vision, including:
-- Glassmorphism UI
-- History Gallery
-- Public API
-- Video Upscaling
+**Recommended Free Hosting Options:**
+1.  **Render (Free Tier):** Great for Python/Flask apps. Supports Docker.
+2.  **Railway (Trial/Low Cost):** Excellent developer experience, easy variable management.
+3.  **Fly.io (Free Allowance):** Deploys Docker containers globally.
+4.  **Google Cloud Run (Free Tier):** Ideal since we are already using GCP for Veo and Storage. (Highly Recommended).
 
 ## License
 
