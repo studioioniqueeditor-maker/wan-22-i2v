@@ -1,12 +1,33 @@
 import pytest
 from web_app import app
 from bs4 import BeautifulSoup
+import os
+import shutil # For cleaning up directories
 
 @pytest.fixture
 def client():
     app.config['TESTING'] = True
+    app.config['SECRET_KEY'] = 'test_secret_key' # Required for sessions
+
+    # Use temporary directories for uploads and outputs for test isolation
+    temp_upload_dir = os.path.join(app.root_path, 'test_temp_uploads')
+    temp_output_dir = os.path.join(app.root_path, 'test_output')
+    app.config['UPLOAD_FOLDER'] = temp_upload_dir
+    app.config['OUTPUT_FOLDER'] = temp_output_dir
+
+    # Ensure directories exist for the test run
+    os.makedirs(temp_upload_dir, exist_ok=True)
+    os.makedirs(temp_output_dir, exist_ok=True)
+
     with app.test_client() as client:
-        yield client
+        with app.app_context():
+            yield client
+    
+    # Clean up after tests
+    if os.path.exists(temp_upload_dir):
+        shutil.rmtree(temp_upload_dir)
+    if os.path.exists(temp_output_dir):
+        shutil.rmtree(temp_output_dir)
 
 def test_vividflow_light_theme(client):
     response = client.get('/')
@@ -29,12 +50,19 @@ def test_layout_structure(client):
     assert response.status_code == 200
     soup = BeautifulSoup(response.data, 'html.parser')
     
-    # Check for 2-column grid (6/6 split)
-    assert soup.find_all('div', class_='col-lg-6'), "Columns (col-lg-6) not found"
-    assert len(soup.find_all('div', class_='col-lg-6')) >= 2, "Expected at least two col-lg-6 columns"
+    main_card = soup.find('div', class_='main-card')
+    assert main_card is not None, "Main card container not found"
+
+    # Check for 2-column grid (7/5 split inside main-card)
+    left_col = main_card.find('div', class_='col-lg-7')
+    right_col = main_card.find('div', class_='col-lg-5')
     
-    # Check for main card container
-    assert soup.find('div', class_='main-card'), "Main card container not found"
+    assert left_col is not None, "Left column (col-lg-7) not found in main-card"
+    assert right_col is not None, "Right column (col-lg-5) not found in main-card"
+    
+    # Check for Recent Generations section within the right column
+    assert right_col.find(string="Recent Generations"), "Recent Generations header not found in right column"
+    assert right_col.find('div', class_='recent-list'), "Recent list container not found in right column"
 
 def test_dropzone_and_loading(client):
     response = client.get('/')
