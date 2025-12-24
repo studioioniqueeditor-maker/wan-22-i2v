@@ -34,30 +34,34 @@
             background-color: var(--bg-color);
             color: var(--text-primary);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            min-height: 100vh;
+            height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 2rem;
+            overflow: hidden;
         }
 
         .main-card {
             background: var(--card-bg);
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-md);
-            padding: 3rem;
+            padding: 2.5rem;
             width: 100%;
             max-width: 1400px;
+            height: calc(100vh - 4rem);
             margin: auto;
+            display: flex;
+            flex-direction: column;
         }
 
         /* Typography */
-        h1 { font-weight: 700; font-size: 1.8rem; letter-spacing: -0.02em; }
+        h1 { font-weight: 700; font-size: 1.5rem; letter-spacing: -0.02em; }
         .form-label { 
             color: var(--text-secondary); 
             font-weight: 500; 
-            font-size: 0.9rem; 
-            margin-bottom: 0.5rem;
+            font-size: 0.85rem; 
+            margin-bottom: 0.4rem;
         }
         
         /* Inputs */
@@ -65,9 +69,9 @@
             background-color: var(--input-bg);
             border: 1px solid transparent;
             border-radius: var(--radius-md);
-            padding: 1rem;
+            padding: 0.75rem 1rem;
             color: var(--text-primary);
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             transition: all 0.2s ease;
         }
         .form-control:focus, .form-select:focus {
@@ -82,9 +86,9 @@
             background-color: var(--accent-black);
             border: none;
             border-radius: 100px; /* Pill shape */
-            padding: 1rem 2rem;
+            padding: 0.75rem 2rem;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.95rem;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .btn-primary:hover {
@@ -95,19 +99,56 @@
         
         /* Drop Zone */
         .drop-zone {
-            border: 2px dashed var(--drop-zone-border);
+            border: 2px dashed #E5E5E5;
             border-radius: var(--radius-lg);
             background-color: var(--drop-zone-bg);
-            padding: 3rem 2rem;
+            padding: 2rem;
             text-align: center;
             transition: all 0.2s ease;
             cursor: pointer;
             color: var(--text-secondary);
+            height: 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         .drop-zone:hover {
             border-color: var(--accent-blue);
             background-color: #F0F8FF;
             color: var(--accent-blue);
+        }
+        .drop-zone-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .drop-zone-text {
+            pointer-events: none;
+            color: #aaa;
+        }
+
+        /* Prompt Wrapper */
+        .prompt-wrapper {
+            position: relative;
+        }
+        #enhance-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: white;
+            border: 1px solid #E5E5E5;
+            font-size: 0.75rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+        #enhance-btn:hover {
+            background: #F5F5F7;
+            border-color: #D2D2D7;
         }
 
         /* Slider */
@@ -118,9 +159,10 @@
             background: var(--input-bg);
             color: var(--text-primary);
             border: 1px solid var(--border-color);
-            padding: 4px 8px;
-            border-radius: 6px;
+            padding: 2px 6px;
+            border-radius: 4px;
             font-weight: 600;
+            font-size: 0.8rem;
         }
 
         #loading { display: none; }
@@ -133,52 +175,83 @@
         }
         .loading-glow { animation: pulse-glow 2s infinite; }
         .enhancing { border-color: var(--accent-blue) !important; }
+
+        /* Textarea Pulse */
+        @keyframes text-pulse {
+            0% { border-color: var(--glass-border); }
+            50% { border-color: var(--accent-blue); box-shadow: 0 0 10px rgba(0, 113, 227, 0.3); }
+            100% { border-color: var(--glass-border); }
+        }
+
+        /* Preview Area */
+        .preview-container {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #111;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Scrollable areas */
+        .col-scroll {
+            overflow-y: auto;
+            max-height: 100%;
+            padding-right: 10px;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #D2D2D7; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #86868B; }
     </style>
 </head>
 <body>
     <div class="main-card">
         <!-- Header -->
-        <div class="d-flex justify-content-between align-items-start mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-shrink-0">
             <div>
-                <h1 class="mb-1">Wan2.1 Video Generator</h1>
-                <p class="text-secondary mb-0">Transform static images into cinematic video loops</p>
+                <h1 class="mb-0">Wan2.1 Video Generator</h1>
+                <p class="text-secondary mb-0" style="font-size: 0.9rem;">Transform static images into cinematic video loops</p>
             </div>
             <div class="d-flex align-items-center gap-2">
                 <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">v2.1 Pro</span>
             </div>
         </div>
 
-        <div class="row g-5">
+        <div class="row g-5 h-100 overflow-hidden">
             <!-- Left Column: Controls -->
-            <div class="col-lg-6">
+            <div class="col-lg-7 h-100 col-scroll">
                 <form action="/generate" method="post" enctype="multipart/form-data" id="gen-form">
                     <!-- Drop Zone -->
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <label for="image" class="form-label">Input Image</label>
                         <div class="drop-zone">
                             <div class="drop-zone-text">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-cloud-upload mb-2" viewBox="0 0 16 16">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#D2D2D7" class="bi bi-cloud-upload mb-2" viewBox="0 0 16 16">
                                     <path fill-rule="evenodd" d="M4.406 1.342A5.53 5.53 0 0 1 8 0c2.69 0 4.923 2 5.166 4.579C14.758 4.804 16 6.137 16 7.773 16 9.569 14.502 11 12.687 11H10a.5.5 0 0 1 0-1h2.688C13.979 10 15 8.988 15 7.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 2.825 10.328 1 8 1a4.53 4.53 0 0 0-2.941 1.1c-.757.652-1.153 1.438-1.153 2.055v.448l-.445.049C2.064 4.805 1 5.952 1 7.318 1 8.785 2.23 10 3.781 10H6a.5.5 0 0 1 0 1H3.781C1.708 11 0 9.366 0 7.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383z"/>
                                     <path fill-rule="evenodd" d="M7.646 4.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V14.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3z"/>
                                 </svg>
-                                <p class="mb-0">Drag & Drop or Click to Upload</p>
+                                <p class="mb-0" style="font-size: 0.9rem;">Drag & Drop or Click to Upload</p>
                             </div>
-                            <img id="image-preview" src="#" alt="Image Preview" style="display: none; max-width: 100%; max-height: 200px; border-radius: 8px; margin: 10px auto; object-fit: contain;">
+                            <img id="image-preview" src="#" alt="Image Preview" style="display: none; max-width: 100%; max-height: 100%; border-radius: 8px; object-fit: contain;">
                             <input class="drop-zone-input" type="file" id="image" name="image" accept="image/*" required onchange="updateFileName(this)">
                         </div>
-                        <div id="file-name" class="mt-2 text-muted small text-center"></div>
+                        <div id="file-name" class="mt-1 text-muted small text-center"></div>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="prompt" class="form-label d-flex justify-content-between">
-                            Prompt
-                            <button type="button" id="enhance-btn" class="btn btn-sm btn-outline-info" style="border-radius: 20px; font-size: 0.75rem;">
+                        <label for="prompt" class="form-label">Prompt</label>
+                        <div class="prompt-wrapper">
+                            <textarea class="form-control" id="prompt" name="prompt" rows="3" required placeholder="Describe your video...">A cinematic shot of...</textarea>
+                            <button type="button" id="enhance-btn" class="btn btn-sm btn-light rounded-pill">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-stars me-1" viewBox="0 0 16 16">
-                                    <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.882 1.882l1.937.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.882 1.882l-.645 1.937c-.11.33-.576.33-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.882-1.882l-1.937-.645c-.33-.11-.33-.576 0-.686l1.937-.645a2.89 2.89 0 0 0 1.882-1.882l.645-1.937zM14.083 2.5a.512.512 0 0 1 .657.657l-.07.21a1.03 1.03 0 0 0 .67.67l.21.07a.512.512 0 0 1 0 .973l-.21.07a1.03 1.03 0 0 0-.67.67l-.07.21a.512.512 0 0 1-.973 0l-.07-.21a1.03 1.03 0 0 0-.67-.67l-.21-.07a.512.512 0 0 1 0-.973l.21-.07a1.03 1.03 0 0 0 .67-.67l.07-.21zM2.5 14.083a.512.512 0 0 1 .657.657l-.07.21a1.03 1.03 0 0 0 .67.67l.21.07a.512.512 0 0 1 0 .973l-.21.07a1.03 1.03 0 0 0-.67.67l-.07.21a.512.512 0 0 1-.973 0l-.07-.21a1.03 1.03 0 0 0-.67-.67l-.21-.07a.512.512 0 0 1 0-.973l.21-.07a1.03 1.03 0 0 0 .67-.67l.07-.21z"/></svg>
-                                ✨ Enhance Prompt
+                                    <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.882 1.882l1.937.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.882 1.882l-.645 1.937c-.11.33-.576.33-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.882-1.882l-1.937-.645c-.33-.11-.33-.576 0-.686l1.937-.645a2.89 2.89 0 0 0 1.882-1.882l.645-1.937zM14.083 2.5a.512.512 0 0 1 .657.657l-.07.21a1.03 1.03 0 0 0 .67.67l.21.07a.512.512 0 0 1 0 .973l-.21.07a1.03 1.03 0 0 0-.67.67l-.07.21a.512.512 0 0 1-.973 0l-.07-.21a1.03 1.03 0 0 0-.67-.67l-.21-.07a.512.512 0 0 1 0-.973l.21-.07a1.03 1.03 0 0 0 .67-.67l.07-.21zM2.5 14.083a.512.512 0 0 1 .657.657l-.07.21a1.03 1.03 0 0 0 .67.67l.21.07a.512.512 0 0 1 0 .973l-.21.07a1.03 1.03 0 0 0-.67.67l-.07.21a.512.512 0 0 1-.973 0l-.07-.21a1.03 1.03 0 0 0-.67-.67l-.21-.07a.512.512 0 0 1 0-.973l.21-.07a1.03 1.03 0 0 0 .67-.67l.07-.21z"/></svg> Enhance
                             </button>
-                        </label>
-                        <textarea class="form-control" id="prompt" name="prompt" rows="3" required placeholder="Describe your video...">A cinematic shot of...</textarea>
+                        </div>
                     </div>
                     
                     <div class="mb-3">
@@ -194,19 +267,18 @@
                         <input type="range" class="form-range" id="cfg" name="cfg" min="1.0" max="20.0" step="0.5" value="7.5" oninput="document.getElementById('cfg-value').textContent = this.value">
                     </div>
 
-                    <!-- New Controls -->
                     <div class="d-flex gap-4 mb-4">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" value="true" id="loop" name="loop" checked>
-                            <label class="form-check-label" for="loop">Loop video</label>
+                            <label class="form-check-label" for="loop" style="font-size: 0.9rem;">Loop video</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" value="true" id="stabilize" name="stabilize">
-                            <label class="form-check-label" for="stabilize">Stabilize motion</label>
+                            <label class="form-check-label" for="stabilize" style="font-size: 0.9rem;">Stabilize motion</label>
                         </div>
                     </div>
 
-                    <div class="row g-3 mb-5">
+                    <div class="row g-3 mb-4">
                         <div class="col-4">
                             <select class="form-select" name="resolution">
                                 <option value="1080p">1080p</option>
@@ -234,27 +306,24 @@
             </div>
 
             <!-- Right Column: Results & History -->
-            <div class="col-lg-6 d-flex flex-column">
+            <div class="col-lg-5 h-100 d-flex flex-column col-scroll">
                 <!-- Preview Area -->
-                <div class="preview-area mb-4 flex-grow-1" style="background: #111; border-radius: var(--radius-lg); overflow: hidden; position: relative; min-height: 400px; display: flex; align-items: center; justify-content: center;">
+                <div class="preview-container mb-3">
                     {% if video_url %}
-                        <div style="width: 100%; height: 100%;">
-                            <video controls width="100%" height="100%" style="object-fit: contain;" autoplay loop>
-                                <source src="{{ video_url }}" type="video/mp4">
-                                Your browser does not support the video tag.
-                            </video>
-                        </div>
+                        <video controls width="100%" height="100%" style="object-fit: contain;" autoplay loop>
+                            <source src="{{ video_url }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
                     {% else %}
                         <div class="text-center text-muted">
-                            <div class="mb-3" style="font-size: 3rem; opacity: 0.5;">▶️</div>
-                            <p class="mb-0">Preview will appear here</p>
-                            <span class="badge bg-dark mt-2">Empty</span>
+                            <div class="mb-2" style="font-size: 2.5rem; opacity: 0.3;">▶️</div>
+                            <p class="mb-0 small">Preview will appear here</p>
                         </div>
                     {% endif %}
                 </div>
 
                 <!-- Meta Info Row -->
-                <div class="d-flex justify-content-between text-secondary mb-4 px-1" style="font-size: 0.9rem;">
+                <div class="d-flex justify-content-between text-secondary mb-4 px-1" style="font-size: 0.8rem;">
                     <span>Estimated time: ~25s</span>
                     <span>Credits: 420 remaining</span>
                 </div>
@@ -263,35 +332,25 @@
                     <div class="spinner-border loading-glow text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
-                    <h5 class="mt-3">Generating Video...</h5>
+                    <h6 class="mt-3">Generating Video...</h6>
                 </div>
 
                 <!-- Recent Generations -->
-                <h5 class="mb-3">Recent Generations</h5>
+                <h5 class="mb-3" style="font-size: 1rem;">Recent Generations</h5>
                 <div class="recent-list">
-                    <!-- Placeholder Item -->
-                    <div class="card border-0 mb-3" style="background: #FAFAFA; border-radius: var(--radius-md);">
+                    <!-- 5 History Items -->
+                    {% for i in range(5) %}
+                    <div class="card border-0 mb-2" style="background: #FAFAFA; border-radius: var(--radius-md);">
                         <div class="card-body p-2 d-flex align-items-center">
-                            <div style="width: 80px; height: 60px; background: #ddd; border-radius: 8px; margin-right: 16px; background-image: url('https://placehold.co/80x60/333/fff?text=MP4'); background-size: cover;"></div>
-                            <div class="flex-grow-1">
-                                <h6 class="mb-1 text-truncate" style="max-width: 250px;">Cyberpunk city street rain...</h6>
-                                <small class="text-secondary">5s • 1080p • 2m ago</small>
+                            <div style="width: 70px; height: 50px; background: #E5E5E5; border-radius: 6px; margin-right: 12px; background-image: url('https://placehold.co/70x50/ccc/fff?text=VID'); background-size: cover;"></div>
+                            <div class="flex-grow-1" style="min-width: 0;">
+                                <h6 class="mb-0 text-truncate" style="font-size: 0.9rem;">Cyberpunk city street...</h6>
+                                <small class="text-secondary" style="font-size: 0.75rem;">5s • 1080p • 2m ago</small>
                             </div>
-                            <button class="btn btn-sm btn-light border rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">↻</button>
+                            <button class="btn btn-sm btn-white border rounded-circle flex-shrink-0" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: white;">↻</button>
                         </div>
                     </div>
-                    
-                    <!-- Placeholder Item 2 -->
-                    <div class="card border-0 mb-3" style="background: #FAFAFA; border-radius: var(--radius-md);">
-                        <div class="card-body p-2 d-flex align-items-center">
-                            <div style="width: 80px; height: 60px; background: #ddd; border-radius: 8px; margin-right: 16px; background-image: url('https://placehold.co/80x60/555/fff?text=MP4'); background-size: cover;"></div>
-                            <div class="flex-grow-1">
-                                <h6 class="mb-1 text-truncate" style="max-width: 250px;">Astronaut floating in ne...</h6>
-                                <small class="text-secondary">3s • 720p • 15m ago</small>
-                            </div>
-                            <button class="btn btn-sm btn-light border rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">↻</button>
-                        </div>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -344,7 +403,8 @@
                 alert('Failed to enhance prompt.');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-stars me-1" viewBox="0 0 16 16"><path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.882 1.882l1.937.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.882 1.882l-.645 1.937c-.11.33-.576.33-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.882-1.882l-1.937-.645c-.33-.11-.33-.576 0-.686l1.937-.645a2.89 2.89 0 0 0 1.882-1.882l.645-1.937zM14.083 2.5a.512.512 0 0 1 .657.657l-.07.21a1.03 1.03 0 0 0 .67.67l.21.07a.512.512 0 0 1 0 .973l-.21.07a1.03 1.03 0 0 0-.67.67l-.07.21a.512.512 0 0 1-.973 0l-.07-.21a1.03 1.03 0 0 0-.67-.67l-.21-.07a.512.512 0 0 1 0-.973l.21-.07a1.03 1.03 0 0 0 .67-.67l.07-.21zM2.5 14.083a.512.512 0 0 1 .657.657l-.07.21a1.03 1.03 0 0 0 .67.67l.21.07a.512.512 0 0 1 0 .973l-.21.07a1.03 1.03 0 0 0-.67.67l-.07.21a.512.512 0 0 1-.973 0l-.07-.21a1.03 1.03 0 0 0-.67-.67l-.21-.07a.512.512 0 0 1 0-.973l.21-.07a1.03 1.03 0 0 0 .67-.67l.07-.21z"/></svg> ✨ Enhance Prompt';
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-stars me-1" viewBox="0 0 16 16"><path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.882 1.882l1.937.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.882 1.882l-.645 1.937c-.11.33-.576.33-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.882-1.882l-1.937-.645c-.33-.11-.33-.576 0-.686l1.937-.645a2.89 2.89 0 0 0 1.882-1.882l.645-1.937zM14.083 2.5a.512.512 0 0 1 .657.657l-.07.21a1.03 1.03 0 0 0 .67.67l.21.07a.512.512 0 0 1 0 .973l-.21.07a1.03 1.03 0 0 0-.67.67l-.07.21a.512.512 0 0 1-.973 0l-.07-.21a1.03 1.03 0 0 0-.67-.67l-.21-.07a.512.512 0 0 1 0-.973l.21-.07a1.03 1.03 0 0 0 .67-.67l.07-.21zM2.5 14.083a.512.512 0 0 1 .657.657l-.07.21a1.03 1.03 0 0 0 .67.67l.21.07a.512.512 0 0 1 0 .973l-.21.07a1.03 1.03 0 0 0 .67-.67l-.07.21a.512.512 0 0 1-.973 0l-.07-.21a1.03 1.03 0 0 0-.67-.67l-.21-.07a.512.512 0 0 1 0-.973l.21-.07a1.03 1.03 0 0 0 .67-.67l.07-.21z"/></svg> ✨ Enhance Prompt';
+                promptArea.classList.remove('enhancing');
             }
         };
 
