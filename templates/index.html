@@ -5,135 +5,152 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wan2.1 Video Generator</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --vivid-bg: #121212;
-            --vivid-accent: #A855F7;
-            --vivid-text: #E0E0E0;
-            --vivid-surface: rgba(255, 255, 255, 0.05);
-            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            /* VividFlow Light Theme */
+            --bg-color: #F5F5F7;
+            --card-bg: #FFFFFF;
+            --text-primary: #1D1D1F;
+            --text-secondary: #86868B;
+            --accent-blue: #0071E3;
+            --accent-black: #000000;
+            --border-color: #D2D2D7;
+            --input-bg: #F5F5F7;
+            --drop-zone-bg: #FAFAFA;
+            --drop-zone-border: #D2D2D7;
+            
+            /* Spacing & Radius */
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
         }
+
         body { 
-            padding-top: 50px; 
-            background-color: var(--vivid-bg);
-            color: var(--vivid-text);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             min-height: 100vh;
-        }
-        .container { 
-            max-width: 800px;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 2rem;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
-        #loading { display: none; }
+
+        .main-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: 3rem;
+            width: 100%;
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        /* Typography */
+        h1 { font-weight: 700; font-size: 1.8rem; letter-spacing: -0.02em; }
+        .form-label { 
+            color: var(--text-secondary); 
+            font-weight: 500; 
+            font-size: 0.9rem; 
+            margin-bottom: 0.5rem;
+        }
         
-        /* Overrides for Bootstrap */
-        h1, h2, h3, h4, h5, h6 { color: #ffffff; }
-        .form-label { color: var(--vivid-accent); font-weight: 500; }
-        .form-control {
-            background-color: var(--vivid-surface);
-            border: var(--glass-border);
-            color: #ffffff;
+        /* Inputs */
+        .form-control, .form-select {
+            background-color: var(--input-bg);
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
         }
-        .form-control:focus {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-color: var(--vivid-accent);
-            color: #ffffff;
-            box-shadow: 0 0 0 0.25rem rgba(168, 85, 247, 0.25);
+        .form-control:focus, .form-select:focus {
+            background-color: #FFFFFF;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15);
         }
+        .form-control::placeholder { color: #BFBFBF; }
+
+        /* Buttons */
         .btn-primary {
-            background-color: var(--vivid-accent);
-            border-color: var(--vivid-accent);
-            transition: all 0.3s ease;
+            background-color: var(--accent-black);
+            border: none;
+            border-radius: 100px; /* Pill shape */
+            padding: 1rem 2rem;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .btn-primary:hover {
-            background-color: #9333ea;
-            border-color: #9333ea;
-            box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
-            transform: translateY(-2px);
-        }
-        .btn-success, .btn-secondary {
-            transition: all 0.3s ease;
-        }
-        .btn-success:hover, .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            background-color: #333333;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
         
         /* Drop Zone */
         .drop-zone {
-            border: 2px dashed rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            padding: 2rem;
+            border: 2px dashed var(--drop-zone-border);
+            border-radius: var(--radius-lg);
+            background-color: var(--drop-zone-bg);
+            padding: 3rem 2rem;
             text-align: center;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.02);
-            position: relative;
+            transition: all 0.2s ease;
             cursor: pointer;
+            color: var(--text-secondary);
         }
         .drop-zone:hover {
-            border-color: var(--vivid-accent);
-            background: rgba(168, 85, 247, 0.05);
-        }
-        .drop-zone-input {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
-        }
-        .drop-zone-text {
-            pointer-events: none;
-            color: #aaa;
-        }
-        
-        /* Loading Animation */
-        @keyframes pulse-glow {
-            0% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.4); }
-            70% { box-shadow: 0 0 0 20px rgba(168, 85, 247, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0); }
-        }
-        .loading-glow {
-            animation: pulse-glow 2s infinite;
-            border-radius: 50%;
-        }
-        .spinner-border {
-            width: 3rem;
-            height: 3rem;
-            color: var(--vivid-accent) !important;
+            border-color: var(--accent-blue);
+            background-color: #F0F8FF;
+            color: var(--accent-blue);
         }
 
-        /* Textarea Pulse */
-        @keyframes text-pulse {
-            0% { border-color: var(--glass-border); }
-            50% { border-color: var(--vivid-accent); box-shadow: 0 0 10px rgba(168, 85, 247, 0.3); }
-            100% { border-color: var(--glass-border); }
+        /* Slider */
+        .form-range::-webkit-slider-thumb {
+            background: var(--accent-blue);
         }
-        .enhancing {
-            animation: text-pulse 1.5s infinite;
+        .badge-value {
+            background: var(--input-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
         }
+
+        #loading { display: none; }
+        
+        /* Animations */
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 0 0 rgba(0, 113, 227, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 113, 227, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 113, 227, 0); }
+        }
+        .loading-glow { animation: pulse-glow 2s infinite; }
+        .enhancing { border-color: var(--accent-blue) !important; }
     </style>
 </head>
 <body>
-    <div class="container my-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="main-card">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-start mb-5">
             <div>
-                <h1 class="mb-0">Wan2.1 Video Generator</h1>
-                <p class="text-muted mb-0">Transform static images into cinematic video loops</p>
+                <h1 class="mb-1">Wan2.1 Video Generator</h1>
+                <p class="text-secondary mb-0">Transform static images into cinematic video loops</p>
             </div>
-            <span class="badge bg-light text-dark border">v2.1 Pro</span>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">v2.1 Pro</span>
+            </div>
         </div>
 
-        <div class="row">
+        <div class="row g-5">
             <!-- Left Column: Controls -->
-            <div class="col-lg-7">
+            <div class="col-lg-6">
                 <form action="/generate" method="post" enctype="multipart/form-data" id="gen-form">
                     <!-- Drop Zone -->
                     <div class="mb-4">
@@ -182,49 +199,62 @@
             </div>
 
             <!-- Right Column: Results & History -->
-            <div class="col-lg-5">
+            <div class="col-lg-6 d-flex flex-column">
                 <!-- Preview Area -->
-                <div class="preview-area p-3 mb-4" style="background: rgba(0,0,0,0.2); border-radius: 12px; min-height: 300px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--glass-border);">
+                <div class="preview-area mb-4 flex-grow-1" style="background: #111; border-radius: var(--radius-lg); overflow: hidden; position: relative; min-height: 400px; display: flex; align-items: center; justify-content: center;">
                     {% if video_url %}
-                        <div style="width: 100%;">
-                            <video controls width="100%" class="border rounded" autoplay loop>
+                        <div style="width: 100%; height: 100%;">
+                            <video controls width="100%" height="100%" style="object-fit: contain;" autoplay loop>
                                 <source src="{{ video_url }}" type="video/mp4">
                                 Your browser does not support the video tag.
                             </video>
-                            <div class="mt-2 d-flex justify-content-between">
-                                <a href="{{ video_url }}" download class="btn btn-sm btn-success">Download</a>
-                                {% if metrics %}
-                                    <small class="text-muted">Gen Time: {{ "%.2f"|format(metrics.generation_time) }}s</small>
-                                {% endif %}
-                            </div>
                         </div>
                     {% else %}
                         <div class="text-center text-muted">
-                            <div class="mb-2" style="font-size: 2rem;">▶️</div>
-                            <p>Preview will appear here</p>
+                            <div class="mb-3" style="font-size: 3rem; opacity: 0.5;">▶️</div>
+                            <p class="mb-0">Preview will appear here</p>
+                            <span class="badge bg-dark mt-2">Empty</span>
                         </div>
                     {% endif %}
                 </div>
 
-                <div id="loading" class="text-center mb-4">
-                    <div class="spinner-border loading-glow" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <h4 class="mt-3">Generating Video...</h4>
-                    <p class="text-muted">This may take a minute.</p>
+                <!-- Meta Info Row -->
+                <div class="d-flex justify-content-between text-secondary mb-4 px-1" style="font-size: 0.9rem;">
+                    <span>Estimated time: ~25s</span>
+                    <span>Credits: 420 remaining</span>
                 </div>
 
-                <!-- Recent Generations (Placeholder) -->
+                <div id="loading" class="text-center mb-4">
+                    <div class="spinner-border loading-glow text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5 class="mt-3">Generating Video...</h5>
+                </div>
+
+                <!-- Recent Generations -->
                 <h5 class="mb-3">Recent Generations</h5>
                 <div class="recent-list">
-                    <div class="card bg-transparent border mb-2" style="border-color: var(--glass-border) !important;">
+                    <!-- Placeholder Item -->
+                    <div class="card border-0 mb-3" style="background: #FAFAFA; border-radius: var(--radius-md);">
                         <div class="card-body p-2 d-flex align-items-center">
-                            <div style="width: 60px; height: 60px; background: #333; border-radius: 8px; margin-right: 12px;"></div>
-                            <div>
-                                <h6 class="mb-0 text-truncate" style="max-width: 200px;">Cyberpunk city street...</h6>
-                                <small class="text-muted">5s • 1080p • 2m ago</small>
+                            <div style="width: 80px; height: 60px; background: #ddd; border-radius: 8px; margin-right: 16px; background-image: url('https://placehold.co/80x60/333/fff?text=MP4'); background-size: cover;"></div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 text-truncate" style="max-width: 250px;">Cyberpunk city street rain...</h6>
+                                <small class="text-secondary">5s • 1080p • 2m ago</small>
                             </div>
-                            <button class="btn btn-sm btn-link text-white ms-auto">↻</button>
+                            <button class="btn btn-sm btn-light border rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">↻</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Placeholder Item 2 -->
+                    <div class="card border-0 mb-3" style="background: #FAFAFA; border-radius: var(--radius-md);">
+                        <div class="card-body p-2 d-flex align-items-center">
+                            <div style="width: 80px; height: 60px; background: #ddd; border-radius: 8px; margin-right: 16px; background-image: url('https://placehold.co/80x60/555/fff?text=MP4'); background-size: cover;"></div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 text-truncate" style="max-width: 250px;">Astronaut floating in ne...</h6>
+                                <small class="text-secondary">3s • 720p • 15m ago</small>
+                            </div>
+                            <button class="btn btn-sm btn-light border rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">↻</button>
                         </div>
                     </div>
                 </div>
