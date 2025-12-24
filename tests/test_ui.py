@@ -60,3 +60,18 @@ def test_cfg_slider(client):
     assert cfg_input is not None, "CFG input not found"
     assert cfg_input['type'] == 'range', "CFG input should be a range slider"
     assert cfg_input['value'] == '7.5', "Default CFG value should be 7.5"
+
+def test_new_controls(client):
+    response = client.get('/')
+    assert response.status_code == 200
+    soup = BeautifulSoup(response.data, 'html.parser')
+    
+    # Checkboxes
+    assert soup.find('input', {'id': 'loop', 'type': 'checkbox'}), "Loop checkbox not found"
+    assert soup.find('input', {'id': 'stabilize', 'type': 'checkbox'}), "Stabilize checkbox not found"
+    
+    # Dropdowns
+    assert soup.find('select', {'name': 'resolution'}), "Resolution select not found"
+    assert soup.find('select', {'name': 'duration'}), "Duration select not found"
+    assert soup.find('select', {'name': 'fps'}), "FPS select not found"
+    

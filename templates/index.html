@@ -189,12 +189,47 @@
                     <div class="mb-4">
                         <label for="cfg" class="form-label d-flex justify-content-between">
                             Motion Guidance (CFG)
-                            <span id="cfg-value" class="badge bg-secondary">7.5</span>
+                            <span id="cfg-value" class="badge-value">7.5</span>
                         </label>
                         <input type="range" class="form-range" id="cfg" name="cfg" min="1.0" max="20.0" step="0.5" value="7.5" oninput="document.getElementById('cfg-value').textContent = this.value">
                     </div>
+
+                    <!-- New Controls -->
+                    <div class="d-flex gap-4 mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="true" id="loop" name="loop" checked>
+                            <label class="form-check-label" for="loop">Loop video</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="true" id="stabilize" name="stabilize">
+                            <label class="form-check-label" for="stabilize">Stabilize motion</label>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-5">
+                        <div class="col-4">
+                            <select class="form-select" name="resolution">
+                                <option value="1080p">1080p</option>
+                                <option value="720p">720p</option>
+                            </select>
+                        </div>
+                        <div class="col-4">
+                            <select class="form-select" name="duration">
+                                <option value="5s">5s</option>
+                                <option value="3s">3s</option>
+                            </select>
+                        </div>
+                        <div class="col-4">
+                            <select class="form-select" name="fps">
+                                <option value="24">24 FPS</option>
+                                <option value="30">30 FPS</option>
+                            </select>
+                        </div>
+                    </div>
                     
-                    <button type="submit" class="btn btn-primary w-100 py-3 fw-bold">Generate Video</button>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <span class="me-2">⚡</span> Generate Video
+                    </button>
                 </form>
             </div>
 

@@ -1,16 +1,16 @@
 # Track Plan: UI Redesign (VividFlow 2.0) - REVISED
 
 ## Phase 1: Foundation & Layout
-- [~] Task: Replace `index.html` styles with a new "VividFlow Light" CSS variable system matching the reference.
-- [ ] Task: Implement the full-screen container and 2-column layout with correct spacing/padding.
-- [ ] Task: Style the "Input Image" drop zone to match the reference (dashed, light fill).
-- [ ] Task: Conductor - User Manual Verification 'Layout & Foundation' (Protocol in workflow.md)
+- [x] Task: Replace `index.html` styles with a new "VividFlow Light" CSS variable system matching the reference. [c4eb649]
+- [x] Task: Implement the full-screen container and 2-column layout with correct spacing/padding. [c4eb649]
+- [x] Task: Style the "Input Image" drop zone to match the reference (dashed, light fill). [c4eb649]
+- [~] Task: Conductor - User Manual Verification 'Layout & Foundation' (Protocol in workflow.md)
 
 ## Phase 2: Component Styling
-- [ ] Task: Restyle all text inputs and textareas (light gray fill, rounded corners).
-- [ ] Task: Style the "Generate Video" button (Black, high contrast) and "Enhance" button.
-- [ ] Task: Implement the custom Slider style (Blue track, numeric badge).
-- [ ] Task: Add the new controls (Loop, Stabilize, Resolution, Duration, FPS) with correct styling.
+- [x] Task: Restyle all text inputs and textareas (light gray fill, rounded corners). [c4eb649]
+- [x] Task: Style the "Generate Video" button (Black, high contrast) and "Enhance" button. [c4eb649]
+- [x] Task: Implement the custom Slider style (Blue track, numeric badge). [c4eb649]
+- [~] Task: Add the new controls (Loop, Stabilize, Resolution, Duration, FPS) with correct styling.
 - [ ] Task: Conductor - User Manual Verification 'Components' (Protocol in workflow.md)
 
 ## Phase 3: Preview & Polish
