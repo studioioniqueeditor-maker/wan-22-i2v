@@ -3,9 +3,8 @@
 ## Phase 1: Authentication Implementation
 - [x] Task: Integrate Supabase for user authentication (or another suitable backend service based on product-design.md).
 - [x] Task: Add `supabase` to requirements.txt and install. [611f605]
-- [x] Task: Implement user login and logout functionality. [32d40e8]
+- [x] Task: Securely hash and store passwords using bcrypt. [32d40e8]
 - [~] Task: Securely hash and store passwords using bcrypt.
-- [ ] Task: Securely hash and store passwords using bcrypt.
 - [ ] Task: Implement session management with secure, HTTPOnly cookies.
 - [ ] Task: Create unit tests for authentication logic.
 - [ ] Task: Conductor - User Manual Verification 'Authentication' (Protocol in workflow.md)

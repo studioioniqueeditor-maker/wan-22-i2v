@@ -1,6 +1,6 @@
 import os
 from supabase import create_client, Client
-from supabase.exceptions import SupabaseException
+# from supabase.exceptions import SupabaseException # Using generic Exception for now
 
 class AuthService:
     def __init__(self, url=None, key=None):
@@ -23,7 +23,7 @@ class AuthService:
             # If 'password' is not accepted, it might be part of 'options'.
             user_data = self.supabase.auth.sign_up(email=email, password=password)
             return {"user_id": user_data.user.id, "email": email}
-        except SupabaseException as e:
+        except Exception as e:
             # Handle Supabase specific exceptions for better error reporting
             # For example, if email already exists.
             raise Exception(f"Supabase signup failed: {e}")
@@ -37,7 +37,7 @@ class AuthService:
         try:
             user = self.supabase.auth.sign_in_with_password(email=email, password=password)
             return {"user_id": user.user.id, "email": email}
-        except SupabaseException as e:
+        except Exception as e:
             raise Exception(f"Supabase login failed: {e}")
         except Exception as e:
             raise Exception(f"An unexpected error occurred during login: {e}")
@@ -51,7 +51,7 @@ class AuthService:
             # Consider checking Supabase Python client docs for current logout method.
             self.supabase.auth.sign_out()
             return True
-        except SupabaseException as e:
+        except Exception as e:
             print(f"Supabase logout failed: {e}")
             return False
         except Exception as e:

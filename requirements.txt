@@ -8,3 +8,4 @@ groq
 google-cloud-storage
 supabase
 supabase
+Flask-Bcrypt
