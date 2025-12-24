@@ -1,4 +1,4 @@
-# Vivid Flow API Documentation (v1.1)
+# Vivid Flow API Documentation (v1.2)
 
 Welcome to the Vivid Flow API! This guide provides everything you need to integrate our powerful video generation capabilities into your own applications.
 
@@ -13,6 +13,115 @@ Authentication is handled via API keys. You must include your key in the `X-API-
 `X-API-Key: your_generated_api_key`
 
 You can generate and manage your API keys from your **Account** page in the Vivid Flow web UI.
+
+---
+
+## Code Examples
+
+### Python (using `requests`)
+
+This example shows how to send an image and a prompt to the `/generate` endpoint.
+
+```python
+import requests
+import os
+
+# --- Configuration ---
+API_KEY = "your_api_key_here"
+IMAGE_PATH = "/path/to/your/image.jpg"
+API_URL = "https://your-app-domain.com/api/v1/generate"
+
+# --- Prepare Headers ---
+headers = {
+    "X-API-Key": API_KEY
+}
+
+# --- Prepare Form Data ---
+payload = {
+    "prompt": "A cinematic, wide shot of a futuristic city at dusk",
+    "model": "veo3.1",
+    "duration_seconds": 8
+}
+
+# --- Open the image file in binary mode ---
+try:
+    with open(IMAGE_PATH, "rb") as image_file:
+        files = {
+            "image": (os.path.basename(IMAGE_PATH), image_file, "image/jpeg")
+        }
+
+        # --- Make the Request ---
+        print("Sending generation request...")
+        response = requests.post(API_URL, headers=headers, data=payload, files=files)
+
+        # --- Handle the Response ---
+        if response.status_code == 202:
+            job_data = response.json()
+            print(f"✅ Job accepted! Job ID: {job_data.get('job_id')}")
+            # You can now poll the /status/{job_id} endpoint with this ID
+        else:
+            print(f"❌ Error: {response.status_code}")
+            print(response.json())
+
+except FileNotFoundError:
+    print(f"Error: The file '{IMAGE_PATH}' was not found.")
+except Exception as e:
+    print(f"An unexpected error occurred: {e}")
+
+```
+
+### JavaScript (Node.js using `axios`)
+
+This example uses `axios` and `form-data` to make the same request from a Node.js environment. First, install the required packages: `npm install axios form-data`.
+
+```javascript
+const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
+const FormData = require('form-data');
+
+// --- Configuration ---
+const API_KEY = 'your_api_key_here';
+const IMAGE_PATH = '/path/to/your/image.jpg';
+const API_URL = 'https://your-app-domain.com/api/v1/generate';
+
+// --- Create a Form ---
+const form = new FormData();
+form.append('prompt', 'A cinematic, wide shot of a futuristic city at dusk');
+form.append('model', 'veo3.1');
+form.append('duration_seconds', '8');
+
+// --- Append the image file ---
+try {
+    const imageStream = fs.createReadStream(IMAGE_PATH);
+    form.append('image', imageStream, {
+        filename: path.basename(IMAGE_PATH),
+        contentType: 'image/jpeg',
+    });
+
+    // --- Set Headers (including form-data headers) ---
+    const headers = {
+        'X-API-Key': API_KEY,
+        ...form.getHeaders(),
+    };
+
+    // --- Make the Request ---
+    console.log('Sending generation request...');
+    axios.post(API_URL, form, { headers })
+        .then(response => {
+            console.log('✅ Job accepted!', response.data);
+            // You can now poll the /status/{job_id} endpoint
+        })
+        .catch(error => {
+            console.error('❌ Error:', error.response ? error.response.status : error.message);
+            if (error.response) {
+                console.error(error.response.data);
+            }
+        });
+} catch (error) {
+    console.error(`Error: Could not read the file '${IMAGE_PATH}'.`, error);
+}
+```
 
 ---
 
@@ -59,18 +168,6 @@ Starts a new video generation job. This endpoint is asynchronous; it returns a j
 | `generate_audio`| Boolean | `false`| Whether to generate audio for the video. |
 | `enhance_prompt`| Boolean | `false`| Whether to use Google's prompt enhancement. |
 
-
-**Example Request (`curl`):**
-
-```bash
-curl -X POST \
-  -H "X-API-Key: your_api_key_here" \
-  -F "image=@/path/to/your/image.png" \
-  -F "prompt=A cinematic shot of a robot playing chess" \
-  -F "model=veo3.1" \
-  -F "duration_seconds=8" \
-  https://your-app-domain.com/api/v1/generate
-```
 
 **Success Response (202 Accepted):**
 
