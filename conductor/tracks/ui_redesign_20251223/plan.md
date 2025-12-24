@@ -10,11 +10,11 @@
 - [x] Task: Restyle all text inputs and textareas (light gray fill, rounded corners). [c4eb649]
 - [x] Task: Style the "Generate Video" button (Black, high contrast) and "Enhance" button. [c4eb649]
 - [x] Task: Implement the custom Slider style (Blue track, numeric badge). [c4eb649]
-- [~] Task: Add the new controls (Loop, Stabilize, Resolution, Duration, FPS) with correct styling.
-- [ ] Task: Conductor - User Manual Verification 'Components' (Protocol in workflow.md)
+- [x] Task: Add the new controls (Loop, Stabilize, Resolution, Duration, FPS) with correct styling. [cd89fb9]
+- [~] Task: Conductor - User Manual Verification 'Components' (Protocol in workflow.md)
 
 ## Phase 3: Preview & Polish
-- [ ] Task: Fix the Preview Window sizing (16:9 aspect ratio, dark background placeholder).
-- [ ] Task: Style the "Recent Generations" list to match the reference cards.
-- [ ] Task: Ensure full responsiveness.
-- [ ] Task: Conductor - User Manual Verification 'Final Polish' (Protocol in workflow.md)
+- [x] Task: Fix the Preview Window sizing (16:9 aspect ratio, dark background placeholder). [c4eb649]
+- [x] Task: Style the "Recent Generations" list to match the reference cards. [c4eb649]
+- [x] Task: Ensure full responsiveness. [c4eb649]
+- [~] Task: Conductor - User Manual Verification 'Final Polish' (Protocol in workflow.md)
