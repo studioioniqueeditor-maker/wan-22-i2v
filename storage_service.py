@@ -36,3 +36,12 @@ class StorageService:
         blob = self.bucket.blob(destination_blob_name)
         blob.upload_from_filename(source_file_name)
         return f"gs://{self.bucket_name}/{destination_blob_name}"
+
+    def download_blob_to_stream(self, blob_name, destination_stream):
+        """Downloads a blob to a file-like object."""
+        blob = self.bucket.blob(blob_name)
+        if not blob.exists():
+            return False
+        blob.download_to_file(destination_stream)
+        destination_stream.seek(0)
+        return True
