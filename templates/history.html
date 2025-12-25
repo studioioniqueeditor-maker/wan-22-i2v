@@ -3,26 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>History - Wan2.1 Video Generator</title>
+    <title>History - Vivid Flow</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #F5F5F7; font-family: 'Inter', sans-serif; padding: 2rem; }
-        .main-card { background: white; border-radius: 20px; padding: 2.5rem; max-width: 1000px; margin: auto; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-        h1 { font-weight: 700; }
-        .back-link { text-decoration: none; color: #0071E3; margin-bottom: 1rem; display: inline-block; font-weight: 500; }
-        .history-item { border-bottom: 1px solid #F0F0F0; padding: 1.5rem 0; }
-        .history-item:last-child { border-bottom: none; }
-        .vid-thumb { width: 160px; aspect-ratio: 16/9; background: #111; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        body { 
+            background-color: #F5F5F7; 
+            font-family: 'Inter', sans-serif; 
+            min-height: 100vh;
+        }
+        .container { max-width: 1000px; }
+        .header-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .history-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .history-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .back-link {
+            color: #000000;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .back-link:hover { color: #0071E3; }
+        .btn-primary {
+            background-color: #000000;
+            border: none;
+            border-radius: 100px;
+            padding: 0.5rem 1.2rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .btn-outline-primary {
+            border-radius: 100px;
+            padding: 0.5rem 1.2rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .vid-thumb {
+            width: 140px;
+            aspect-ratio: 16/9;
+            background: #111;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .vid-thumb video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #86868B;
+        }
+        .empty-state h5 {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1D1D1F;
+        }
+        .user-badge {
+            background: #F5F5F7;
+            padding: 0.25rem 0.75rem;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #1D1D1F;
+        }
     </style>
 </head>
 <body>
-    <div class="main-card">
-        <a href="/" class="back-link">&larr; Back to Generator</a>
-        <h1 class="mb-4">Generation History</h1>
-        
+    <div class="container py-4">
+        <!-- Header with Navigation -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="/" class="back-link mb-0">← Back to Generator</a>
+            <div class="d-flex gap-2">
+                <a href="/account" class="btn btn-outline-primary">Account Settings</a>
+                <form action="/logout" method="POST" class="m-0">
+                    <button type="submit" class="btn btn-outline-danger">Log Out</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="header-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="mb-0">Generation History</h1>
+                <span class="user-badge">{{ user_email }}</span>
+            </div>
+        </div>
+
         <div id="history-container">
-            <p class="text-center text-muted py-5">Loading history...</p>
+            <div class="empty-state">
+                <div class="spinner-border text-secondary mb-3" role="status"></div>
+                <h5>Loading history...</h5>
+                <p>Please wait while we fetch your recent generations.</p>
+            </div>
         </div>
     </div>
 
@@ -37,35 +131,51 @@
                     container.innerHTML = '';
                     data.forEach(item => {
                         const div = document.createElement('div');
-                        div.className = 'history-item d-flex gap-4';
+                        div.className = 'history-card';
                         div.innerHTML = `
-                            <div class="vid-thumb flex-shrink-0">
-                                <video muted loop onmouseover="this.play()" onmouseout="this.pause()" style="width: 100%; height: 100%; object-fit: cover;">
-                                    <source src="${item.video_url}" type="video/mp4">
-                                </video>
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h5 class="mb-0 fs-6 fw-bold">ID: ${item.id.substring(0, 8)}</h5>
-                                    <span class="text-secondary small">${item.timestamp}</span>
+                            <div class="d-flex gap-3 align-items-start">
+                                <div class="vid-thumb flex-shrink-0">
+                                    <video muted loop onmouseover="this.play()" onmouseout="this.pause()">
+                                        <source src="${item.video_url}" type="video/mp4">
+                                    </video>
                                 </div>
-                                <p class="text-muted small mb-3" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                                    ${item.prompt}
-                                </p>
-                                <div class="d-flex gap-2">
-                                    <a href="${item.video_url}" download class="btn btn-sm btn-outline-primary rounded-pill px-3">Download</a>
-                                    <a href="${item.video_url}" target="_blank" class="btn btn-sm btn-light rounded-pill px-3">View Full</a>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-0 fw-bold text-truncate" style="max-width: 400px;">
+                                                ${item.prompt || 'Untitled Generation'}
+                                            </h6>
+                                            <small class="text-secondary">${new Date(item.created_at || Date.now()).toLocaleString()}</small>
+                                        </div>
+                                        <span class="badge ${item.status === 'COMPLETED' ? 'bg-success' : item.status === 'FAILED' ? 'bg-danger' : 'bg-secondary'}">${item.status || 'COMPLETED'}</span>
+                                    </div>
+                                    <div class="d-flex gap-2 mt-3">
+                                        <a href="${item.video_url}" target="_blank" class="btn btn-primary">View Full</a>
+                                        <a href="${item.video_url}" download class="btn btn-outline-primary">Download</a>
+                                    </div>
                                 </div>
                             </div>
                         `;
                         container.appendChild(div);
                     });
                 } else {
-                    container.innerHTML = '<div class="alert alert-light text-center py-5">No generations yet. Start creating!</div>';
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <h5>No generations yet</h5>
+                            <p>Start creating amazing videos with Vivid Flow!</p>
+                            <a href="/" class="btn btn-primary mt-3">Create Your First Video</a>
+                        </div>
+                    `;
                 }
             } catch (err) {
                 console.error(err);
-                document.getElementById('history-container').innerHTML = '<div class="alert alert-danger">Failed to load history.</div>';
+                document.getElementById('history-container').innerHTML = `
+                    <div class="empty-state">
+                        <h5 class="text-danger">Failed to load history</h5>
+                        <p>There was an error fetching your history. Please try again.</p>
+                        <button class="btn btn-primary mt-3" onclick="fetchHistory()">Retry</button>
+                    </div>
+                `;
             }
         }
 
