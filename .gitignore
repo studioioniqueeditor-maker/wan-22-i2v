@@ -18,3 +18,4 @@ conductor/tracks/*/
 !conductor/tracks/*/plan.md
 !conductor/tracks/*/spec.md
 !conductor/tracks/*/metadata.json
+logs/

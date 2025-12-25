@@ -38,21 +38,65 @@ limiter = Limiter(
 # Simplified CORS for local dev
 CORS(app)
 
+import logging
+from logging.handlers import RotatingFileHandler
+
+# Load environment variables
+load_dotenv(".env.client")
+
+# --- Logging Configuration ---
+# Create logs directory if it doesn't exist
+if not os.path.exists('logs'):
+    os.makedirs('logs')
+
+# Configure root logger
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("vividflow")
+logger.setLevel(logging.DEBUG)
+
+# File Handler (Persistent logs)
+file_handler = RotatingFileHandler('logs/app.log', maxBytes=1024 * 1024 * 10, backupCount=5)
+file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+))
+file_handler.setLevel(logging.DEBUG)
+logger.addHandler(file_handler)
+
+# Console Handler (Cloud Run / Local output)
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter(
+    '%(asctime)s %(levelname)s: %(message)s'
+))
+console_handler.setLevel(logging.INFO) # Keep console cleaner
+logger.addHandler(console_handler)
+
+app = Flask(__name__)
+
+# ... (rest of the app config)
+
 @app.before_request
-def debug_request():
-    print(f"DEBUG: {request.method} {request.path} | User: {session.get('user_id')}")
+def log_request_info():
+    logger.info(f"Request: {request.method} {request.path} | User: {session.get('user_id')}")
+    if request.path.startswith('/api/') or request.method == 'POST':
+        # Be careful not to log large file binaries or passwords
+        sensitive_keys = ['password', 'image', 'api_key']
+        safe_form = {k: v for k, v in request.form.items() if k not in sensitive_keys}
+        logger.debug(f"Form Data: {safe_form}")
 
-@app.errorhandler(404)
-def resource_not_found(e):
-    if request.path.startswith('/api/'):
-        return jsonify(error=str(e)), 404
-    return render_template('index.html', error="Page not found"), 404
+@app.after_request
+def log_response_info(response):
+    logger.info(f"Response: {response.status} | Content-Type: {response.content_type}")
+    return response
 
-@app.errorhandler(500)
-def internal_server_error(e):
-    if request.path.startswith('/api/'):
-        return jsonify(error="Internal Server Error"), 500
-    return render_template('index.html', error="Internal Server Error"), 500
+@app.errorhandler(Exception)
+def handle_unexpected_error(e):
+    logger.error(f"Unhandled Exception: {e}", exc_info=True)
+    if request.path.startswith('/api/') or request.headers.get('Accept') == 'application/json':
+        return jsonify(error="Internal Server Error", details=str(e)), 500
+    return render_template('index.html', error="An unexpected error occurred."), 500
+
+# Remove the old simple debug_request and previous error handlers as they are replaced
+
 
 # Ensure directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -246,8 +290,11 @@ def enhance_prompt():
 
 def _run_video_generation(user_id, file, form_data):
     """Helper function to handle the core video generation logic."""
+    logger.debug(f"Starting video generation for user {user_id}")
     model_name = form_data.get('model', 'wan2.1')
     prompt = form_data.get('prompt')
+    logger.debug(f"Model: {model_name}, Prompt: {prompt}")
+    
     negative_prompt = form_data.get('negative_prompt', 'blurry, low quality, distorted')
     
     try:
@@ -268,6 +315,7 @@ def _run_video_generation(user_id, file, form_data):
         filename = f"{uuid.uuid4()}_{file.filename}"
         image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(image_path)
+        logger.debug(f"Image saved to {image_path}")
 
         MOCK_MODE = os.getenv("MOCK_MODE", "false").lower() == "true"
         runpod_api_key = os.getenv("RUNPOD_API_KEY")
@@ -275,8 +323,10 @@ def _run_video_generation(user_id, file, form_data):
 
         if not MOCK_MODE:
             if not runpod_api_key:
+                logger.error("RUNPOD_API_KEY missing")
                 return {"status": "error", "message": "RUNPOD_API_KEY not set"}
             if not runpod_endpoint_id:
+                logger.error("RUNPOD_ENDPOINT_ID missing")
                 return {"status": "error", "message": "RUNPOD_ENDPOINT_ID not set"}
         
         # Use Factory to get client
@@ -286,9 +336,12 @@ def _run_video_generation(user_id, file, form_data):
                 runpod_endpoint_id=runpod_endpoint_id,
                 runpod_api_key=runpod_api_key
             )
+            logger.debug(f"Client initialized for {model_name}")
         except ValueError as e:
+             logger.error(f"Client factory error: {e}")
              return {"status": "error", "message": str(e)}
         except NotImplementedError as e:
+             logger.error(f"Client factory not implemented: {e}")
              return {"status": "error", "message": str(e)}
 
         generation_params = {
@@ -308,6 +361,8 @@ def _run_video_generation(user_id, file, form_data):
             "enhance_prompt": auto_enhance
         }
 
+        logger.info(f"Starting generation with params: {generation_params}")
+
         if MOCK_MODE:
             result = {
                 'status': 'COMPLETED',
@@ -321,6 +376,7 @@ def _run_video_generation(user_id, file, form_data):
             save_success = True
         else:
             result = client.create_video_from_image(**generation_params)
+            logger.debug(f"Client result: {result}")
             output_filename = f"wan22_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
             output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
             save_success = client.save_video_result(result, output_path)
@@ -334,8 +390,9 @@ def _run_video_generation(user_id, file, form_data):
                         storage_service = StorageService()
                         gcs_url = storage_service.upload_file(output_path, f"videos/{output_filename}")
                         final_video_url = gcs_url
+                        logger.info(f"Video uploaded to GCS: {final_video_url}")
                     except Exception as e:
-                        print(f"ERROR: GCS Upload failed: {e}")
+                        logger.error(f"GCS Upload failed: {e}")
 
                 if final_video_url is None:
                     final_video_url = url_for('get_video', filename=output_filename, _external=True)
@@ -349,6 +406,7 @@ def _run_video_generation(user_id, file, form_data):
                     "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 }
                 AuthService.add_history(user_id, history_entry)
+                logger.info("History recorded.")
 
                 return {
                     "status": "success", 
@@ -356,17 +414,20 @@ def _run_video_generation(user_id, file, form_data):
                     "metrics": result.get('metrics', {})
                 }
             else:
+                logger.error("Failed to save video result to disk")
                 return {"status": "error", "message": "Failed to save video result."}
         else:
             error_msg = result.get('error', 'Unknown error')
+            logger.error(f"Generation failed from client: {error_msg}")
             return {"status": "error", "message": f"Generation failed: {error_msg}"}
 
     except Exception as e:
-        print(f"Error in generation helper: {e}")
+        logger.error(f"Critical error in generation helper: {e}", exc_info=True)
         return {"status": "error", "message": "An unexpected error occurred."}
     finally:
         if image_path and os.path.exists(image_path):
             os.remove(image_path)
+
 
 
 @app.route('/generate', methods=['POST'])
