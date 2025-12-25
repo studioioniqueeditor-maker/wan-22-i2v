@@ -205,9 +205,10 @@ def _run_video_generation(user_id, file, form_data):
         logger.info(f"Starting generation with params: {generation_params}")
 
         if MOCK_MODE:
+            logger.info("MOCK MODE: Simulating successful generation")
             result = {
                 'status': 'COMPLETED',
-                'output': {'video_base64': 'mock_video_data'}, 
+                'output': 'mock_video_data', 
                 'metrics': {'spin_up_time': 0.1, 'generation_time': 0.1}
             }
             output_filename = f"mock_{uuid.uuid4()}.mp4"
