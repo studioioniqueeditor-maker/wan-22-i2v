@@ -15,7 +15,7 @@ A professional-grade toolkit and web interface for generating videos from images
   - Robust error handling and diagnostic reporting.
   - Rate limiting and session management.
   - Comprehensive logging and feedback.
-- **Public API:** A full-featured API for programmatic video generation.
+- **Public API:** A full-featured API for programmatic video generation with API Key authentication.
 
 ## Prerequisites
 
@@ -54,16 +54,16 @@ A professional-grade toolkit and web interface for generating videos from images
     Required keys include:
     - `RUNPOD_API_KEY`, `RUNPOD_ENDPOINT_ID` (for Wan 2.1)
     - `GOOGLE_CLOUD_PROJECT`, `GCS_BUCKET_NAME` (for Veo 3.1 & Storage)
-    - `SUPABASE_URL`, `SUPABASE_KEY` (for Auth)
+    - `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_SERVICE_KEY` (for Auth & History)
     - `FLASK_SECRET_KEY`
 
 2.  **Google Cloud Credentials:**
-    Ensure your `gcs-key.json` (Service Account Key) is present in the root directory or set via `GOOGLE_APPLICATION_CREDENTIALS`.
+    Ensure your `gcs-key.json` (Service Account Key) is present in the root directory or set via `GOOGLE_APPLICATION_CREDENTIALS` if not using Cloud Run's built-in identity.
     
 3.  **Supabase Database Setup:**
     - Go to your Supabase project's **SQL Editor**.
     - Click **New query**.
-    - Copy the contents of `schema.sql` from this repository and run it. This will create the `profiles` and `history` tables.
+    - Copy the contents of `schema.sql` from this repository and run it. This will create the `profiles` and `history` tables with correct triggers and RLS policies.
 
 ## Usage
 
@@ -81,15 +81,18 @@ python web_app.py
 - Upload an image and set your creative prompts.
 - Click **CREATE VIDEO**.
 
+### Public API
+
+1.  **Get your API Key:** Log in to the web app, go to **Settings/Account**, and generate a key.
+2.  **Make Requests:** Send requests to `/api/v1/generate` with your key in the `X-API-Key` header.
+    *   See `API_DOCS.md` for full documentation and code examples.
+
 ## CI/CD & Deployment
 
 This project is set up for automated deployment. 
 
-**Recommended Free Hosting Options:**
-1.  **Render (Free Tier):** Great for Python/Flask apps. Supports Docker.
-2.  **Railway (Trial/Low Cost):** Excellent developer experience, easy variable management.
-3.  **Fly.io (Free Allowance):** Deploys Docker containers globally.
-4.  **Google Cloud Run (Free Tier):** Ideal since we are already using GCP for Veo and Storage. (Highly Recommended).
+**Recommended Hosting:**
+**Google Cloud Run (Free Tier):** Highly recommended as it integrates natively with Veo (Vertex AI) and GCS. See `deployment.md` for step-by-step instructions.
 
 ## License
 
