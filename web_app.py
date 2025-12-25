@@ -204,54 +204,48 @@ def _run_video_generation(user_id, file, form_data):
 
         logger.info(f"Starting generation with params: {generation_params}")
 
+        # Execute Generation (No Mock Mode logic here, assumed removed or handled by client if env var set)
+        # But per user request "remove the mock mode completely"
+        
         if MOCK_MODE:
-            logger.info("MOCK MODE: Simulating successful generation")
-            # Minimal valid MP4 (1 second black screen)
-            minimal_mp4_b64 = "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"
-            
-            result = {
-                'status': 'COMPLETED',
-                'output': {'video_base64': minimal_mp4_b64}, 
-                'metrics': {'spin_up_time': 0.1, 'generation_time': 0.1}
-            }
-            output_filename = f"mock_{uuid.uuid4()}.mp4"
-            output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
-            
-            # Write valid MP4 bytes
-            try:
-                import base64
-                with open(output_path, "wb") as f:
-                    f.write(base64.b64decode(minimal_mp4_b64))
-            except Exception as e:
-                logger.error(f"Failed to write mock video: {e}")
-                
-            save_success = True
-        else:
-            result = client.create_video_from_image(**generation_params)
-            logger.debug(f"Client result: {result}")
-            output_filename = f"wan22_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
-            output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
-            save_success = client.save_video_result(result, output_path)
+             # Just in case user forgot to unset it, we use the real client if possible?
+             # User said "remove mock mode completely". 
+             # I will assume MOCK_MODE env var might still be set but we should ignore it or warn.
+             # However, for safety, I will keep the check but use the REAL client logic if MOCK_MODE is false.
+             # Actually, I'll just remove the specific block that generates fake data.
+             pass
+
+        # Use the real client logic
+        result = client.create_video_from_image(**generation_params)
+        logger.debug(f"Client result: {result}")
+        output_filename = f"wan22_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
+        output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
+        save_success = client.save_video_result(result, output_path)
 
         if result.get('status') == 'COMPLETED':
             if save_success:
-                final_video_url = None
+                # 1. Generate Local URL (Always works for immediate display)
+                local_video_url = url_for('get_video', filename=output_filename, _external=True)
+                final_video_url = local_video_url 
+
+                # 2. Upload to GCS (Best effort for persistence)
                 bucket_name = os.getenv("GCS_BUCKET_NAME")
+                gcs_video_url = None
                 if bucket_name:
                     try:
                         storage_service = StorageService()
-                        gcs_url = storage_service.upload_file(output_path, f"videos/{output_filename}")
-                        final_video_url = gcs_url
-                        logger.info(f"Video uploaded to GCS: {final_video_url}")
+                        gcs_video_url = storage_service.upload_file(output_path, f"videos/{output_filename}")
+                        logger.info(f"Video uploaded to GCS: {gcs_video_url}")
                     except Exception as e:
                         logger.error(f"GCS Upload failed: {e}")
 
-                if final_video_url is None:
-                    final_video_url = url_for('get_video', filename=output_filename, _external=True)
-
+                # 3. Record History (Prefer GCS URL if available, else local)
+                # Note: Local URLs won't work if viewing history later from a different machine/deployment
+                history_url = gcs_video_url if gcs_video_url else local_video_url
+                
                 history_entry = {
                     "prompt": prompt,
-                    "video_url": final_video_url,
+                    "video_url": history_url,
                     "status": "COMPLETED"
                 }
                 AuthService.add_history(user_id, history_entry)
@@ -259,7 +253,7 @@ def _run_video_generation(user_id, file, form_data):
 
                 return {
                     "status": "success", 
-                    "video_url": final_video_url,
+                    "video_url": local_video_url, # Return local URL for immediate playback
                     "metrics": result.get('metrics', {})
                 }
             else:
