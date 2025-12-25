@@ -16,25 +16,18 @@ from dotenv import load_dotenv
 # 1. Load environment variables FIRST
 load_dotenv(".env.client")
 
-# Configure logging
+# 2. Configure Logging
 if not os.path.exists('logs'):
     os.makedirs('logs')
 
-# 1. Set root logger to WARNING to suppress third-party noise by default
 logging.basicConfig(level=logging.WARNING)
-
-# 2. Configure our app logger to DEBUG
 logger = logging.getLogger("vividflow")
 logger.setLevel(logging.DEBUG)
-# Prevent propagation to root logger to avoid double logging if handlers are attached to root
 logger.propagate = False 
 
-# 3. Explicitly silence noisy libraries
-logging.getLogger("httpcore").setLevel(logging.WARNING)
-logging.getLogger("httpx").setLevel(logging.WARNING)
-logging.getLogger("urllib3").setLevel(logging.WARNING)
-logging.getLogger("google").setLevel(logging.WARNING)
-logging.getLogger("werkzeug").setLevel(logging.WARNING) # Reduce Flask dev server noise if needed
+# Silence noisy libraries
+for lib in ["httpcore", "httpx", "urllib3", "google", "werkzeug"]:
+    logging.getLogger(lib).setLevel(logging.WARNING)
 
 file_handler = RotatingFileHandler('logs/app.log', maxBytes=1024 * 1024 * 10, backupCount=5)
 file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s [in %(pathname)s:%(lineno)d]'))
@@ -45,7 +38,6 @@ console_handler = logging.StreamHandler()
 console_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s'))
 console_handler.setLevel(logging.INFO)
 logger.addHandler(console_handler)
-
 
 # 3. Import local modules AFTER env loading
 from video_client_factory import VideoClientFactory
@@ -62,16 +54,23 @@ app.config['SESSION_COOKIE_SECURE'] = False
 
 bcrypt = Bcrypt(app)
 
-limiter = Limiter(
-    get_remote_address,
-    app=app,
-    default_limits=["2000 per day", "500 per hour"],
-    storage_uri="memory://",
-)
-
-# Disable limiter for local development unless explicitly enabled
-if os.getenv("FLASK_ENV") != "production":
-    limiter.enabled = False
+# Conditional Limiter Configuration
+if os.getenv("FLASK_ENV") == "production":
+    limiter = Limiter(
+        get_remote_address,
+        app=app,
+        default_limits=["2000 per day", "500 per hour"],
+        storage_uri="memory://",
+    )
+else:
+    # Development: no-op limiter by setting extremely high limits
+    limiter = Limiter(
+        get_remote_address,
+        app=app,
+        default_limits=["1000000 per day"],
+        storage_uri="memory://",
+    )
+    logger.info("Rate limiter set to high limits for development.")
 
 CORS(app)
 
@@ -83,16 +82,24 @@ os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 
 @app.before_request
 def log_request_info():
-    logger.info(f"Request: {request.method} {request.path} | User: {session.get('user_id')}")
+    logger.info(f"Incoming Request: {request.method} {request.path} | IP: {request.remote_addr} | User: {session.get('user_id')}")
     if request.path.startswith('/api/') or request.method == 'POST':
         sensitive_keys = ['password', 'image', 'api_key']
         safe_form = {k: v for k, v in request.form.items() if k not in sensitive_keys}
-        logger.debug(f"Form Data: {safe_form}")
+        if safe_form:
+            logger.debug(f"Form Data: {safe_form}")
 
 @app.after_request
 def log_response_info(response):
     logger.info(f"Response: {response.status} | Content-Type: {response.content_type}")
     return response
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    logger.warning(f"Rate limit exceeded: {e}")
+    if request.path.startswith('/api/') or request.headers.get('Accept') == 'application/json':
+        return jsonify(error="Rate limit exceeded", details=str(e)), 429
+    return render_template('index.html', error="Too many requests. Please try again later."), 429
 
 @app.errorhandler(Exception)
 def handle_unexpected_error(e):
@@ -143,7 +150,6 @@ def _run_video_generation(user_id, file, form_data):
     except ValueError:
         cfg = 7.5
 
-    # Veo specific params
     camera_motion = form_data.get('camera_motion', 'None')
     subject_animation = form_data.get('subject_animation', 'None')
     environmental_animation = form_data.get('environmental_animation', 'None')
@@ -152,7 +158,6 @@ def _run_video_generation(user_id, file, form_data):
 
     image_path = None
     try:
-        # Save uploaded image temporarily
         filename = f"{uuid.uuid4()}_{file.filename}"
         image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(image_path)
@@ -164,13 +169,10 @@ def _run_video_generation(user_id, file, form_data):
 
         if not MOCK_MODE:
             if not runpod_api_key:
-                logger.error("RUNPOD_API_KEY missing")
                 return {"status": "error", "message": "RUNPOD_API_KEY not set"}
             if not runpod_endpoint_id:
-                logger.error("RUNPOD_ENDPOINT_ID missing")
                 return {"status": "error", "message": "RUNPOD_ENDPOINT_ID not set"}
         
-        # Use Factory to get client
         try:
             client = VideoClientFactory.get_client(
                 model_name,
@@ -235,7 +237,6 @@ def _run_video_generation(user_id, file, form_data):
                 if final_video_url is None:
                     final_video_url = url_for('get_video', filename=output_filename, _external=True)
 
-                # Record in history
                 history_entry = {
                     "prompt": prompt,
                     "video_url": final_video_url,
@@ -295,7 +296,7 @@ def history():
 def account():
     user_email = session.get('email', 'User')
     user = AuthService.get_user_by_id(session.get('user_id'))
-    return render_template('account.html', user_email=user_email, api_key=user.get('api_key'))
+    return render_template('account.html', user_email=user_email, api_key=user.get('api_key') if user else None)
 
 # --- API Routes for Auth ---
 
@@ -309,7 +310,7 @@ def generate_api_key():
     return jsonify({"error": "Failed to generate API key"}), 500
 
 @app.route('/login', methods=['POST'])
-@limiter.limit("5 per minute")
+@limiter.limit("20 per minute")
 def login_post():
     email = request.form.get('email')
     password = request.form.get('password')
@@ -333,7 +334,7 @@ def login_post():
         return jsonify({"error": "Authentication failed."}), 401
 
 @app.route('/register', methods=['POST'])
-@limiter.limit("5 per minute")
+@limiter.limit("20 per minute")
 def register_post():
     email = request.form.get('email')
     password = request.form.get('password')
@@ -408,15 +409,9 @@ def enhance_prompt():
         return jsonify({"error": "Prompt enhancement failed."}), 500
 
 @app.route('/generate', methods=['POST'])
-
 @login_required
-
 def generate():
-
     user_id = session.get('user_id')
-
-    
-
     if 'image' not in request.files:
         return render_template('index.html', error="No image uploaded", user_email=session.get('email'))
     file = request.files['image']
@@ -444,17 +439,10 @@ def get_history_api():
     return jsonify(history)
 
 @app.route('/api/v1/generate', methods=['POST'])
-
 @api_key_required
-
 def api_generate():
-
     user_id = request.user['user_id']
-
-    
-
     if 'image' not in request.files:
-
         return jsonify({"error": "No image file provided"}), 400
     file = request.files['image']
     if file.filename == '':
