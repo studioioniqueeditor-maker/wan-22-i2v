@@ -103,6 +103,7 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
+            logger.warning(f"Unauthorized access attempt to {request.path}")
             return redirect(url_for('login_page'))
         return f(*args, **kwargs)
     return decorated_function
@@ -112,10 +113,12 @@ def api_key_required(f):
     def decorated_function(*args, **kwargs):
         api_key = request.headers.get('X-API-Key')
         if not api_key:
+            logger.warning(f"API key missing for {request.path}")
             return jsonify({"error": "API key is missing"}), 401
         
         user = AuthService.get_user_by_api_key(api_key)
         if not user:
+            logger.warning(f"Invalid API key used for {request.path}")
             return jsonify({"error": "Invalid API key"}), 401
         
         request.user = user
@@ -401,9 +404,15 @@ def enhance_prompt():
         return jsonify({"error": "Prompt enhancement failed."}), 500
 
 @app.route('/generate', methods=['POST'])
+
 @login_required
+
 def generate():
+
     user_id = session.get('user_id')
+
+    
+
     if 'image' not in request.files:
         return render_template('index.html', error="No image uploaded", user_email=session.get('email'))
     file = request.files['image']
@@ -431,10 +440,17 @@ def get_history_api():
     return jsonify(history)
 
 @app.route('/api/v1/generate', methods=['POST'])
+
 @api_key_required
+
 def api_generate():
+
     user_id = request.user['user_id']
+
+    
+
     if 'image' not in request.files:
+
         return jsonify({"error": "No image file provided"}), 400
     file = request.files['image']
     if file.filename == '':
