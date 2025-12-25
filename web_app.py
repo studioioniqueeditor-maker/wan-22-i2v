@@ -217,7 +217,6 @@ def _run_video_generation(user_id, file, form_data):
 
                 # Record in history
                 history_entry = {
-                    "id": str(uuid.uuid4()),
                     "prompt": prompt,
                     "video_url": final_video_url,
                     "status": "COMPLETED"
