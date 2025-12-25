@@ -42,6 +42,18 @@ CORS(app)
 def debug_request():
     print(f"DEBUG: {request.method} {request.path} | User: {session.get('user_id')}")
 
+@app.errorhandler(404)
+def resource_not_found(e):
+    if request.path.startswith('/api/'):
+        return jsonify(error=str(e)), 404
+    return render_template('index.html', error="Page not found"), 404
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    if request.path.startswith('/api/'):
+        return jsonify(error="Internal Server Error"), 500
+    return render_template('index.html', error="Internal Server Error"), 500
+
 # Ensure directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
@@ -236,30 +248,118 @@ def _run_video_generation(user_id, file, form_data):
     """Helper function to handle the core video generation logic."""
     model_name = form_data.get('model', 'wan2.1')
     prompt = form_data.get('prompt')
-    # ... (extract all other parameters from form_data) ...
+    negative_prompt = form_data.get('negative_prompt', 'blurry, low quality, distorted')
+    
+    try:
+        cfg = float(form_data.get('cfg', 7.5))
+    except ValueError:
+        cfg = 7.5
+
+    # Veo specific params
+    camera_motion = form_data.get('camera_motion', 'None')
+    subject_animation = form_data.get('subject_animation', 'None')
+    environmental_animation = form_data.get('environmental_animation', 'None')
+    duration_seconds = int(form_data.get('duration', 4))
+    auto_enhance = form_data.get('auto_enhance') == 'true'
 
     image_path = None
     try:
+        # Save uploaded image temporarily
         filename = f"{uuid.uuid4()}_{file.filename}"
         image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(image_path)
 
-        # ... (rest of the generation logic from the original `generate` function) ...
-        # Ensure to return a dictionary with the result
-        
-        # This is a simplified placeholder for the refactored logic
-        # In a real implementation, the full logic from `generate` would be moved here
-        result = {"status": "COMPLETED", "output": {"video_base64": "mock"}}
-        output_filename = f"mock_{uuid.uuid4()}.mp4"
-        output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
-        save_success = True
+        MOCK_MODE = os.getenv("MOCK_MODE", "false").lower() == "true"
+        runpod_api_key = os.getenv("RUNPOD_API_KEY")
+        runpod_endpoint_id = os.getenv("RUNPOD_ENDPOINT_ID")
 
-        if result.get('status') == 'COMPLETED' and save_success:
-            final_video_url = url_for('get_video', filename=output_filename, _external=True)
-            AuthService.add_history(user_id, {"prompt": prompt, "video_url": final_video_url})
-            return {"status": "success", "video_url": final_video_url}
+        if not MOCK_MODE:
+            if not runpod_api_key:
+                return {"status": "error", "message": "RUNPOD_API_KEY not set"}
+            if not runpod_endpoint_id:
+                return {"status": "error", "message": "RUNPOD_ENDPOINT_ID not set"}
+        
+        # Use Factory to get client
+        try:
+            client = VideoClientFactory.get_client(
+                model_name,
+                runpod_endpoint_id=runpod_endpoint_id,
+                runpod_api_key=runpod_api_key
+            )
+        except ValueError as e:
+             return {"status": "error", "message": str(e)}
+        except NotImplementedError as e:
+             return {"status": "error", "message": str(e)}
+
+        generation_params = {
+            "image_path": image_path,
+            "prompt": prompt,
+            "negative_prompt": negative_prompt,
+            "width": 1280, 
+            "height": 720, 
+            "length": 81,  
+            "steps": 30,
+            "seed": 42,
+            "cfg": cfg,
+            "camera_motion": camera_motion,
+            "subject_animation": subject_animation,
+            "environmental_animation": environmental_animation,
+            "duration_seconds": duration_seconds,
+            "enhance_prompt": auto_enhance
+        }
+
+        if MOCK_MODE:
+            result = {
+                'status': 'COMPLETED',
+                'output': {'video_base64': 'mock_video_data'}, 
+                'metrics': {'spin_up_time': 0.1, 'generation_time': 0.1}
+            }
+            output_filename = f"mock_{uuid.uuid4()}.mp4"
+            output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
+            with open(output_path, "wb") as f:
+                f.write(b"mock video content")
+            save_success = True
         else:
-            return {"status": "error", "message": result.get('error', 'Generation failed')}
+            result = client.create_video_from_image(**generation_params)
+            output_filename = f"wan22_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
+            output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
+            save_success = client.save_video_result(result, output_path)
+
+        if result.get('status') == 'COMPLETED':
+            if save_success:
+                final_video_url = None
+                bucket_name = os.getenv("GCS_BUCKET_NAME")
+                if bucket_name:
+                    try:
+                        storage_service = StorageService()
+                        gcs_url = storage_service.upload_file(output_path, f"videos/{output_filename}")
+                        final_video_url = gcs_url
+                    except Exception as e:
+                        print(f"ERROR: GCS Upload failed: {e}")
+
+                if final_video_url is None:
+                    final_video_url = url_for('get_video', filename=output_filename, _external=True)
+
+                # Record in history
+                history_entry = {
+                    "id": str(uuid.uuid4()),
+                    "prompt": prompt,
+                    "video_url": final_video_url,
+                    "status": "COMPLETED",
+                    "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }
+                AuthService.add_history(user_id, history_entry)
+
+                return {
+                    "status": "success", 
+                    "video_url": final_video_url,
+                    "metrics": result.get('metrics', {})
+                }
+            else:
+                return {"status": "error", "message": "Failed to save video result."}
+        else:
+            error_msg = result.get('error', 'Unknown error')
+            return {"status": "error", "message": f"Generation failed: {error_msg}"}
 
     except Exception as e:
         print(f"Error in generation helper: {e}")
@@ -284,9 +384,15 @@ def generate():
     result = _run_video_generation(user_id, file, request.form)
 
     if result['status'] == 'success':
-        return render_template('index.html', video_url=result['video_url'], user_email=session.get('email'))
+        # Check if the client wants JSON (AJAX request)
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify(result)
+        return render_template('index.html', video_url=result['video_url'], metrics=result.get('metrics'), user_email=session.get('email'))
     else:
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify(result), 500
         return render_template('index.html', error=result['message'], user_email=session.get('email'))
+
 
 
 # --- History & Usage API ---
