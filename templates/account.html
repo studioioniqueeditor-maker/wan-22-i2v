@@ -14,18 +14,36 @@
     </style>
 </head>
 <body>
-    <div class="main-card">
-        <a href="/" class="back-link">&larr; Back to Generator</a>
-        <h1 class="mb-4">Account Settings</h1>
-        <div class="mb-3">
-            <label class="form-label text-secondary fw-bold small">Email</label>
-            <div class="form-control-plaintext fs-5">{{ user_email }}</div>
+    <div class="container mt-5">
+        <h2>Account Settings</h2>
+        <p>Welcome, {{ user_email }}</p>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                API Key
+            </div>
+            <div class="card-body">
+                {% if api_key %}
+                    <p>Your API Key:</p>
+                    <pre><code>{{ api_key }}</code></pre>
+                {% else %}
+                    <p>You have not generated an API key yet.</p>
+                {% endif %}
+                <button id="generate-key-btn" class="btn btn-primary">Generate New Key</button>
+            </div>
         </div>
-        <hr>
-        <p class="text-muted">More settings coming soon.</p>
-        <form action="/logout" method="POST">
-             <button type="submit" class="btn btn-danger">Log Out</button>
-        </form>
     </div>
+
+    <script>
+        document.getElementById('generate-key-btn').addEventListener('click', async () => {
+            const response = await fetch('/api/v1/keys', { method: 'POST' });
+            if (response.ok) {
+                const data = await response.json();
+                location.reload();
+            } else {
+                alert('Failed to generate API key.');
+            }
+        });
+    </script>
 </body>
 </html>

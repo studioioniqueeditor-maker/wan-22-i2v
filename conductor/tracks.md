@@ -40,7 +40,7 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: API Service Expansion & Validation
+## [ ] Track: API Service Expansion & Validation (Active)
 *Link: [./conductor/tracks/api_expansion_20251223/](./conductor/tracks/api_expansion_20251223/)*
 
 ---

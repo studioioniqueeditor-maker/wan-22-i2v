@@ -1,92 +1,53 @@
-# Deployment Guide: Google Cloud Run
+# 🚀 How to Put Your Website Online (A Simple Guide)
 
-This guide provides step-by-step instructions for deploying **Vivid Flow** to Google Cloud Run.
+Follow these steps to move your code from your computer to the whole world!
 
-## Prerequisites
+## Step 1: Get Your "Passwords" Ready
+1.  Find the file named `.env.example`.
+2.  Make a copy of it and name the new copy exactly `.env`.
+3.  Open `.env` and fill in all the blank spots with your special keys and passwords.
+    *   *Think of this like your secret treasure map.*
 
-1.  **Google Cloud Project:** An active GCP project with billing enabled.
-2.  **gcloud CLI:** Installed and authenticated (`gcloud auth login`).
-3.  **Docker:** Installed locally (if building manually).
-4.  **APIs Enabled:**
+## Step 2: Save Your Work on GitHub
+Every time you finish making something cool, save it to GitHub:
+1.  Open your "Terminal" (the black box where you type code).
+2.  Type this and press Enter:
     ```bash
-    gcloud services enable run.googleapis.com containerregistry.googleapis.com cloudbuild.googleapis.com
+    git add .
+    ```
+3.  Then type this (you can change the message in the quotes):
+    ```bash
+    git commit -m "I added some cool new stuff!"
+    ```
+4.  Finally, push it to GitHub:
+    ```bash
+    git push origin main
     ```
 
-## 1. Prepare Configuration
-
-Google Cloud Run uses environment variables. You should not commit your `.env` file. Instead, you will pass these during deployment or use **Secret Manager**.
-
-### Required Environment Variables:
-- `FLASK_SECRET_KEY`
-- `SUPABASE_URL`
-- `SUPABASE_KEY`
-- `GOOGLE_CLOUD_PROJECT`
-- `GCS_BUCKET_NAME`
-- `RUNPOD_API_KEY`
-- `RUNPOD_ENDPOINT_ID`
-
-## 2. Deploy using Cloud Build (Easiest)
-
-This command builds your Docker image on Google's infrastructure and deploys it to Cloud Run.
-
-```bash
-gcloud run deploy vivid-flow \
-  --source . \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --set-env-vars "GOOGLE_CLOUD_PROJECT=your-project-id" \
-  --set-env-vars "GCS_BUCKET_NAME=your-bucket-name" \
-  --set-env-vars "FLASK_ENV=production"
-```
-
-*Note: You will be prompted for other environment variables if they are not set.*
-
-## 3. Handling Secrets (Recommended)
-
-For sensitive keys (Supabase, RunPod, Secret Key), use GCP Secret Manager:
-
-1.  **Create a secret:**
+## Step 3: Send it to Google Cloud (The Magic Step)
+We made a special "Magic Button" script to do the hard work for you.
+1.  In your Terminal, type this to make the script ready:
     ```bash
-    echo -n "your-api-key" | gcloud secrets create RUNPOD_API_KEY --data-file=-
+    chmod +x deploy.sh
     ```
-2.  **Grant access:**
+2.  Now, run the script to launch your website:
     ```bash
-    gcloud secrets add-iam-policy-binding RUNPOD_API_KEY \
-      --member="serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
-      --role="roles/secretmanager.secretAccessor"
+    ./deploy.sh
     ```
-3.  **Deploy with secret reference:**
-    ```bash
-    --update-secrets=RUNPOD_API_KEY=RUNPOD_API_KEY:latest
-    ```
+3.  **Watch the screen!** Google will ask you a few questions. Usually, you can just press **Enter** or type **y** for "Yes".
 
-## 4. Custom Domain Setup
+## Step 4: You Are Live! 🎈
+1.  When the script finishes, it will give you a link that looks like `https://vivid-flow-xyz.a.run.app`.
+2.  Click that link. **Boom!** Your website is alive for everyone to see.
 
-Once deployed, you will get a `.a.run.app` URL. To use your own domain/subdomain:
+---
 
-1.  Go to the **Cloud Run** console.
-2.  Click **Manage Custom Domains**.
-3.  Click **Add Mapping**.
-4.  Select the service `vivid-flow`.
-5.  Enter your domain (e.g., `vivid.yourdomain.com`).
-6.  Follow the instructions to update your DNS records (A and AAAA records) with your domain registrar.
+### 🛠️ What happens behind the scenes?
+1.  **Code on local:** You write the code on your computer.
+2.  **Push to git:** You save a copy on GitHub so you never lose it.
+3.  **Push to GCP:** Your computer sends the code to Google's super-computers.
+4.  **Build on GCP:** Google turns your code into a "Container" (like a digital lunchbox that holds everything the app needs).
+5.  **Go live:** Google gives you a web link and starts the app!
 
-## 5. CI/CD with GitHub Actions
-
-Your repository already contains a `.github/workflows/main.yml`. To enable auto-deployment:
-
-1.  Create a Service Account in GCP with `Cloud Run Admin` and `Storage Admin` roles.
-2.  Download the JSON key.
-3.  Add the key to GitHub Secrets as `GCP_SA_KEY`.
-4.  Add `GCP_PROJECT_ID` to GitHub Secrets.
-5.  Update your workflow to include a deploy step (using `google-github-actions/deploy-cloudrun`).
-
-## Troubleshooting
-
-- **Logs:** View real-time logs via `gcloud run services logs tail vivid-flow`.
-- **Port:** Ensure the app listens on `$PORT` (the provided Dockerfile handles this).
-- **Memory:** If generating large videos, you may need to increase memory:
-  ```bash
-  gcloud run services update vivid-flow --memory 2Gi
-  ```
+### 🌟 Pro Tip for Your Domain
+If you want to use your own special name (like `mycoolsite.com`), go to the **Google Cloud Console**, find **Cloud Run**, and click **Manage Custom Domains**. It's like putting a nameplate on your new digital house!

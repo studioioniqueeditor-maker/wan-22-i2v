@@ -2,7 +2,7 @@
 
 Welcome to the Vivid Flow API! This guide provides everything you need to integrate our powerful video generation capabilities into your own applications.
 
-**Base URL:** `https://your-app-domain.com/api/v1`
+**Base URL:** `https://vivid.studioionique.com/api/v1`
 
 ---
 
@@ -29,7 +29,7 @@ import os
 # --- Configuration ---
 API_KEY = "your_api_key_here"
 IMAGE_PATH = "/path/to/your/image.jpg"
-API_URL = "https://your-app-domain.com/api/v1/generate"
+API_URL = "https://vivid.studioionique.com/api/v1/generate"
 
 # --- Prepare Headers ---
 headers = {
@@ -83,7 +83,7 @@ const FormData = require('form-data');
 // --- Configuration ---
 const API_KEY = 'your_api_key_here';
 const IMAGE_PATH = '/path/to/your/image.jpg';
-const API_URL = 'https://your-app-domain.com/api/v1/generate';
+const API_URL = 'https://vivid.studioionique.com/api/v1/generate';
 
 // --- Create a Form ---
 const form = new FormData();

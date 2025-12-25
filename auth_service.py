@@ -25,11 +25,14 @@ def get_supabase_admin():
         url: str = os.environ.get("SUPABASE_URL")
         key: str = os.environ.get("SUPABASE_SERVICE_KEY")
         
-        if not key:
-            print("DEBUG: SUPABASE_SERVICE_KEY is missing! Falling back to ANON key (RLS will block inserts).")
-            key = os.environ.get("SUPABASE_KEY")
+        # Debugging Output
+        print(f"DEBUG: Initializing Admin Client. URL present: {bool(url)}")
+        if key:
+            print(f"DEBUG: SUPABASE_SERVICE_KEY found (starts with: {key[:5]}...)")
         else:
-            print("DEBUG: Using SUPABASE_SERVICE_KEY for admin operations.")
+            print("DEBUG: SUPABASE_SERVICE_KEY is MISSING!")
+            key = os.environ.get("SUPABASE_KEY")
+            print(f"DEBUG: Falling back to ANON key (starts with: {key[:5] if key else 'None'}...)")
 
         if url and key:
             _supabase_admin = create_client(url, key)

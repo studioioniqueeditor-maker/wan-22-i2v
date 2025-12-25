@@ -1,8 +1,8 @@
-# Vivid Flow - Wan 2.1 & Veo 3.1 I2V Client (v1.0.0)
+# Vivid Flow - Wan 2.1 & Veo 3.1 I2V Client (v1.2.0)
 
 A professional-grade toolkit and web interface for generating videos from images using the state-of-the-art **Wan 2.1** (via RunPod) and **Google Veo 3.1** (via Vertex AI) models. This project is the first production release of the VividFlow platform.
 
-## Features (v1.0.0)
+## Features (v1.2.0)
 
 - **Dual Model Support:** Seamlessly switch between **Wan 2.1** (open-source) and **Google Veo 3.1** (enterprise).
 - **Modern Web Interface:**
@@ -15,6 +15,7 @@ A professional-grade toolkit and web interface for generating videos from images
   - Robust error handling and diagnostic reporting.
   - Rate limiting and session management.
   - Comprehensive logging and feedback.
+- **Public API:** A full-featured API for programmatic video generation.
 
 ## Prerequisites
 
@@ -58,6 +59,11 @@ A professional-grade toolkit and web interface for generating videos from images
 
 2.  **Google Cloud Credentials:**
     Ensure your `gcs-key.json` (Service Account Key) is present in the root directory or set via `GOOGLE_APPLICATION_CREDENTIALS`.
+    
+3.  **Supabase Database Setup:**
+    - Go to your Supabase project's **SQL Editor**.
+    - Click **New query**.
+    - Copy the contents of `schema.sql` from this repository and run it. This will create the `profiles` and `history` tables.
 
 ## Usage
 
