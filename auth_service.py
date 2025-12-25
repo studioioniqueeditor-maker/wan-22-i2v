@@ -3,8 +3,9 @@ import uuid
 from datetime import datetime
 from supabase import create_client, Client
 
-# Global supabase client, initialized on first use
+# Global supabase clients
 _supabase_client: Client = None
+_supabase_admin: Client = None
 
 def get_supabase():
     global _supabase_client
@@ -16,6 +17,17 @@ def get_supabase():
         else:
             print("Warning: Supabase credentials not found. Using mock implementation.")
     return _supabase_client
+
+def get_supabase_admin():
+    """Returns a Supabase client with Service Role privileges (bypasses RLS)."""
+    global _supabase_admin
+    if _supabase_admin is None:
+        url: str = os.environ.get("SUPABASE_URL")
+        # Try to get the service key, fallback to anon key (which will likely fail RLS)
+        key: str = os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_KEY")
+        if url and key:
+            _supabase_admin = create_client(url, key)
+    return _supabase_admin or get_supabase()
 
 # Mock Database (Fallback for local dev without .env)
 MOCK_USERS = {}
@@ -59,7 +71,10 @@ class AuthService:
 
     @staticmethod
     def generate_api_key(user_id):
-        client = get_supabase()
+        # Use admin client to bypass RLS for profile updates if needed, 
+        # or standard client if the user is updating their own.
+        # Since this runs in a backend context without user session, prefer admin.
+        client = get_supabase_admin()
         if not client: # Fallback to mock
             new_key = f"vivid-api-key-{uuid.uuid4()}"
             for email, user in MOCK_USERS.items():
@@ -76,7 +91,8 @@ class AuthService:
     
     @staticmethod
     def get_user_by_api_key(api_key):
-        client = get_supabase()
+        # Use admin client to search all profiles
+        client = get_supabase_admin()
         if not client: # Fallback to mock
             for email, user in MOCK_USERS.items():
                 if user.get("api_key") == api_key:
@@ -88,7 +104,8 @@ class AuthService:
 
     @staticmethod
     def get_user_by_id(user_id):
-        client = get_supabase()
+        # Use admin client to get any user
+        client = get_supabase_admin()
         if not client: # Fallback to mock
             for email, user in MOCK_USERS.items():
                 if user["user_id"] == user_id:
@@ -100,7 +117,8 @@ class AuthService:
 
     @staticmethod
     def add_history(user_id, entry):
-        client = get_supabase()
+        # Use admin client to insert history for a user
+        client = get_supabase_admin()
         if not client: # Fallback to mock
             for email, user in MOCK_USERS.items():
                 if user["user_id"] == user_id:
@@ -119,7 +137,8 @@ class AuthService:
 
     @staticmethod
     def get_history(user_id):
-        client = get_supabase()
+        # Use admin client to read history
+        client = get_supabase_admin()
         if not client: # Fallback to mock
             for email, user in MOCK_USERS.items():
                 if user["user_id"] == user_id:
