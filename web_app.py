@@ -14,7 +14,8 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 
 # 1. Load environment variables FIRST
-load_dotenv(".env.client")
+load_dotenv(".env.client") # Load public client variables
+load_dotenv(".env")        # Load secrets (overrides if present)
 
 # 2. Configure Logging
 if not os.path.exists('logs'):

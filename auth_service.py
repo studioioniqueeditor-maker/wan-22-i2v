@@ -23,8 +23,14 @@ def get_supabase_admin():
     global _supabase_admin
     if _supabase_admin is None:
         url: str = os.environ.get("SUPABASE_URL")
-        # Try to get the service key, fallback to anon key (which will likely fail RLS)
-        key: str = os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_KEY")
+        key: str = os.environ.get("SUPABASE_SERVICE_KEY")
+        
+        if not key:
+            print("DEBUG: SUPABASE_SERVICE_KEY is missing! Falling back to ANON key (RLS will block inserts).")
+            key = os.environ.get("SUPABASE_KEY")
+        else:
+            print("DEBUG: Using SUPABASE_SERVICE_KEY for admin operations.")
+
         if url and key:
             _supabase_admin = create_client(url, key)
     return _supabase_admin or get_supabase()
