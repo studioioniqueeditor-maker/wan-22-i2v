@@ -12,19 +12,24 @@ class StorageService:
         self.bucket = self.client.bucket(self.bucket_name)
 
     def upload_file(self, source_file_name, destination_blob_name):
-        """Uploads a file to the bucket and returns a signed URL."""
+        """Uploads a file to the bucket and returns a URL (signed if possible, else public)."""
         blob = self.bucket.blob(destination_blob_name)
         
         blob.upload_from_filename(source_file_name)
         
-        # Generate a signed URL valid for 1 hour
-        import datetime
-        url = blob.generate_signed_url(
-            version="v4",
-            expiration=datetime.timedelta(minutes=60),
-            method="GET"
-        )
-        return url
+        # Try to generate a signed URL
+        try:
+            import datetime
+            url = blob.generate_signed_url(
+                version="v4",
+                expiration=datetime.timedelta(minutes=60),
+                method="GET"
+            )
+            return url
+        except Exception as e:
+            print(f"Warning: Could not generate signed URL ({e}). Returning public URL.")
+            # Fallback to public URL structure
+            return f"https://storage.googleapis.com/{self.bucket_name}/{destination_blob_name}"
 
     def upload_file_get_uri(self, source_file_name, destination_blob_name):
         """Uploads a file to the bucket and returns the gs:// URI."""

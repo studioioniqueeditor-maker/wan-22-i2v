@@ -104,6 +104,10 @@ class AuthService:
             return False
             
         entry['user_id'] = user_id
+        # Remove timestamp if present, let Postgres handle created_at
+        if 'timestamp' in entry:
+            del entry['timestamp']
+            
         res = supabase.table('history').insert(entry).execute()
         return bool(res.data)
 
