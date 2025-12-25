@@ -2,7 +2,10 @@ import requests
 import base64
 import time
 import os
+import logging
 from video_client_interface import IVideoClient
+
+logger = logging.getLogger("vividflow")
 
 class WanVideoClient(IVideoClient):
     def __init__(self, runpod_endpoint_id, runpod_api_key):
@@ -15,7 +18,7 @@ class WanVideoClient(IVideoClient):
         }
 
     def create_video_from_image(self, image_path, prompt, negative_prompt="", width=1280, height=720, length=121, steps=30, seed=42, cfg=3.0, **kwargs):
-        print(f"Encoding image: {image_path}")
+        logger.info(f"Encoding image: {image_path}")
         try:
             with open(image_path, "rb") as image_file:
                 image_base64 = base64.b64encode(image_file.read()).decode('utf-8')
@@ -36,13 +39,14 @@ class WanVideoClient(IVideoClient):
             }
         }
 
-        print(f"Sending request to RunPod: {self.url}")
+        logger.info(f"Sending request to RunPod: {self.url}")
         try:
             submission_time = time.time()
             # Increased timeout for video generation
             response = requests.post(self.url, json=payload, headers=self.headers, timeout=600)
             
             if response.status_code != 200:
+                logger.error(f"API Error: {response.status_code} - {response.text}")
                 return {
                     "status": "FAILED", 
                     "error": f"API returned status {response.status_code}", 
@@ -71,12 +75,13 @@ class WanVideoClient(IVideoClient):
             status = data.get("status")
             
             if job_id and status in ["IN_QUEUE", "IN_PROGRESS"]:
-                print(f"Job {job_id} is {status}. Polling for completion...")
+                logger.info(f"Job {job_id} is {status}. Polling for completion...")
                 return self._poll_job(job_id, submission_time)
             
             return {"status": status, "id": job_id}
 
         except Exception as e:
+            logger.error(f"Exception in create_video_from_image: {e}")
             return {"status": "FAILED", "error": str(e)}
 
     def _poll_job(self, job_id, submission_time, timeout=600, interval=5):
@@ -90,7 +95,7 @@ class WanVideoClient(IVideoClient):
             try:
                 response = requests.get(status_url, headers=self.headers)
                 if response.status_code != 200:
-                    print(f"Polling failed: {response.status_code}")
+                    logger.warning(f"Polling failed: {response.status_code}")
                     time.sleep(interval)
                     continue
                 
@@ -103,8 +108,6 @@ class WanVideoClient(IVideoClient):
                 if status == "COMPLETED":
                     completion_time = time.time()
                     
-                    # If we missed the transition to IN_PROGRESS (e.g. very fast job), assume it started just before finishing or use submission time if logic dictates.
-                    # For metrics consistency:
                     if start_time is None:
                         start_time = submission_time 
                         
@@ -122,11 +125,11 @@ class WanVideoClient(IVideoClient):
                 elif status == "FAILED":
                     return {"status": "FAILED", "error": data.get("error", "Unknown job error")}
                 
-                print(f"Status: {status}...")
+                logger.info(f"Job {job_id} status: {status}...")
                 time.sleep(interval)
                 
             except Exception as e:
-                print(f"Polling exception: {e}")
+                logger.error(f"Polling exception: {e}")
                 time.sleep(interval)
                 
         return {"status": "FAILED", "error": "Polling timed out"}
@@ -143,7 +146,7 @@ class WanVideoClient(IVideoClient):
 
     def save_video_result(self, result, output_path):
         if result.get("status") != "COMPLETED":
-            print("Cannot save result: Status is not COMPLETED")
+            logger.warning("Cannot save result: Status is not COMPLETED")
             return False
 
         output_data = result.get("output")
@@ -161,12 +164,10 @@ class WanVideoClient(IVideoClient):
             video_base64 = output_data
 
         if not video_base64:
-             print(f"Error: No video data found in output. Output type: {type(output_data)}")
-             if isinstance(output_data, dict):
-                 print(f"Available keys: {list(output_data.keys())}")
+             logger.error(f"Error: No video data found in output. Output type: {type(output_data)}")
              return False
 
-        print(f"Saving video to {output_path}...")
+        logger.info(f"Saving video to {output_path}...")
         try:
             # Strip potential data URL prefix
             if isinstance(video_base64, str) and "," in video_base64:
@@ -175,32 +176,32 @@ class WanVideoClient(IVideoClient):
             video_bytes = base64.b64decode(video_base64)
             with open(output_path, "wb") as f:
                 f.write(video_bytes)
-            print("Video saved successfully.")
+            logger.info("Video saved successfully.")
             return True
         except Exception as e:
-            print(f"Failed to save video: {e}")
+            logger.error(f"Failed to save video: {e}")
             return False
 
     def batch_process_images(self, image_folder_path, output_folder_path, prompt, negative_prompt="", width=1280, height=720, length=121, steps=30, seed=42, cfg=3.0):
         if not os.path.exists(output_folder_path):
             os.makedirs(output_folder_path)
-            print(f"Created output directory: {output_folder_path}")
+            logger.info(f"Created output directory: {output_folder_path}")
 
         image_extensions = ('.png', '.jpg', '.jpeg', '.webp', '.bmp')
         try:
             files = [f for f in os.listdir(image_folder_path) if f.lower().endswith(image_extensions)]
         except FileNotFoundError:
-            print(f"Error: Input directory '{image_folder_path}' not found.")
+            logger.error(f"Error: Input directory '{image_folder_path}' not found.")
             return {"successful": 0, "total_files": 0, "results": []}
 
         total_files = len(files)
         successful = 0
         results = []
 
-        print(f"Found {total_files} images to process in {image_folder_path}")
+        logger.info(f"Found {total_files} images to process in {image_folder_path}")
 
         for i, filename in enumerate(files, 1):
-            print(f"[{i}/{total_files}] Processing {filename}...")
+            logger.info(f"[{i}/{total_files}] Processing {filename}...")
             image_path = os.path.join(image_folder_path, filename)
             output_filename = os.path.splitext(filename)[0] + ".mp4"
             output_path = os.path.join(output_folder_path, output_filename)
@@ -219,14 +220,14 @@ class WanVideoClient(IVideoClient):
             
             if result.get("status") == "COMPLETED":
                 if self.save_video_result(result, output_path):
-                    print(f"Successfully processed and saved: {output_filename}")
+                    logger.info(f"Successfully processed and saved: {output_filename}")
                     successful += 1
                     results.append({"file": filename, "status": "SUCCESS", "output": output_path})
                 else:
-                    print(f"Failed to save video for: {filename}")
+                    logger.error(f"Failed to save video for: {filename}")
                     results.append({"file": filename, "status": "SAVE_FAILED"})
             else:
-                print(f"Failed to process {filename}: {result.get('error')}")
+                logger.error(f"Failed to process {filename}: {result.get('error')}")
                 results.append({"file": filename, "status": "FAILED", "error": result.get("error")})
 
         return {

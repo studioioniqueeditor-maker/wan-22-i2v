@@ -16,16 +16,28 @@ from dotenv import load_dotenv
 # 1. Load environment variables FIRST
 load_dotenv(".env.client")
 
-# 2. Configure Logging
+# Configure logging
 if not os.path.exists('logs'):
     os.makedirs('logs')
 
-logging.basicConfig(level=logging.DEBUG)
+# 1. Set root logger to WARNING to suppress third-party noise by default
+logging.basicConfig(level=logging.WARNING)
+
+# 2. Configure our app logger to DEBUG
 logger = logging.getLogger("vividflow")
 logger.setLevel(logging.DEBUG)
+# Prevent propagation to root logger to avoid double logging if handlers are attached to root
+logger.propagate = False 
+
+# 3. Explicitly silence noisy libraries
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+logging.getLogger("google").setLevel(logging.WARNING)
+logging.getLogger("werkzeug").setLevel(logging.WARNING) # Reduce Flask dev server noise if needed
 
 file_handler = RotatingFileHandler('logs/app.log', maxBytes=1024 * 1024 * 10, backupCount=5)
-file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
+file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s]: %(message)s [in %(pathname)s:%(lineno)d]'))
 file_handler.setLevel(logging.DEBUG)
 logger.addHandler(file_handler)
 
@@ -33,6 +45,7 @@ console_handler = logging.StreamHandler()
 console_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s'))
 console_handler.setLevel(logging.INFO)
 logger.addHandler(console_handler)
+
 
 # 3. Import local modules AFTER env loading
 from video_client_factory import VideoClientFactory

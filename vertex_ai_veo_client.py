@@ -5,6 +5,9 @@ from google.genai import types
 import os
 import time
 import mimetypes
+import logging
+
+logger = logging.getLogger("vividflow")
 
 class VertexAIVeoClient(IVideoClient):
     def __init__(self, project_id, location="us-central1"):
@@ -14,7 +17,7 @@ class VertexAIVeoClient(IVideoClient):
         try:
             self.storage_service = StorageService()
         except Exception as e:
-            print(f"Warning: StorageService init failed: {e}")
+            logger.warning(f"StorageService init failed: {e}")
             self.storage_service = None
 
     def _get_client(self):
@@ -37,8 +40,8 @@ class VertexAIVeoClient(IVideoClient):
         duration_seconds = int(kwargs.get('duration_seconds', 4))
         enhance_prompt_flag = kwargs.get('enhance_prompt', False)
         
-        print(f"Veo 3.1: Processing {image_path} with prompt '{prompt}'")
-        print(f"Params: Duration={duration_seconds}s, AutoEnhance={enhance_prompt_flag}")
+        logger.info(f"Veo 3.1: Processing {image_path} with prompt '{prompt}'")
+        logger.debug(f"Params: Duration={duration_seconds}s, AutoEnhance={enhance_prompt_flag}")
 
         # Build Keywords
         keywords = []
@@ -62,7 +65,7 @@ class VertexAIVeoClient(IVideoClient):
             # Use a unique path to avoid collisions/caching issues
             gcs_path = f"inputs/{int(time.time())}_{filename}"
             gcs_uri = self.storage_service.upload_file_get_uri(image_path, gcs_path)
-            print(f"Uploaded input image to {gcs_uri}")
+            logger.info(f"Uploaded input image to {gcs_uri}")
             
             mime_type, _ = mimetypes.guess_type(image_path)
             if not mime_type:
@@ -72,7 +75,7 @@ class VertexAIVeoClient(IVideoClient):
             return {"status": "FAILED", "error": f"Failed to upload image to GCS: {e}"}
 
         # Generate Video
-        print(f"Starting Veo video generation with prompt: {final_prompt}")
+        logger.info(f"Starting Veo video generation with prompt: {final_prompt}")
         try:
             # Reverting to types.Image as it's the official way, 
             # but ensuring we use it exactly as the SDK expects.
@@ -95,7 +98,7 @@ class VertexAIVeoClient(IVideoClient):
             
             # Poll for completion
             while not operation.done:
-                print(f"Waiting for video generation... (Job ID: {operation.name})")
+                logger.info(f"Waiting for video generation... (Job ID: {operation.name})")
                 time.sleep(5)
                 operation = client.operations.get(operation)
 
@@ -122,8 +125,8 @@ class VertexAIVeoClient(IVideoClient):
         try:
             with open(output_path, "wb") as f:
                 f.write(video_data)
-            print(f"Veo video saved to {output_path}")
+            logger.info(f"Veo video saved to {output_path}")
             return True
         except Exception as e:
-            print(f"Failed to save Veo video: {e}")
+            logger.error(f"Failed to save Veo video: {e}")
             return False
