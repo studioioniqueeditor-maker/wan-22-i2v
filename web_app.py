@@ -69,6 +69,10 @@ limiter = Limiter(
     storage_uri="memory://",
 )
 
+# Disable limiter for local development unless explicitly enabled
+if os.getenv("FLASK_ENV") != "production":
+    limiter.enabled = False
+
 CORS(app)
 
 # Ensure directories exist
