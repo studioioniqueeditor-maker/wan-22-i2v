@@ -66,6 +66,7 @@
             gap: 0.5rem;
             margin-top: 0.5rem;
         }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -74,44 +75,44 @@
         
         <div class="header-card">
             <h1 class="mb-1">Account Settings</h1>
-            <p class="text-secondary mb-0">{{ user_email }}</p>
+            <p class="text-secondary mb-0" id="user-email-display">{{ user_email }}</p>
         </div>
 
         <!-- API Key Section -->
-        <div class="settings-card">
+        <div class="settings-card" id="api-key-card">
             <h5 class="mb-3">API Key Management</h5>
             
-            {% if api_key %}
-            <div class="mb-3">
-                <label class="form-label fw-bold">Your Current API Key:</label>
-                <div class="api-key-display" id="api-key-value">{{ api_key }}</div>
-                <div class="key-actions">
-                    <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyApiKey()">Copy Key</button>
-                    <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="showNewKeyConfirm()">Generate New</button>
+            <!-- Existing Key View -->
+            <div id="existing-key-view" class="{% if not api_key %}hidden{% endif %}">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Your Current API Key:</label>
+                    <div class="api-key-display" id="api-key-value">{{ api_key if api_key else '' }}</div>
+                    <div class="key-actions">
+                        <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyApiKey()">Copy Key</button>
+                        <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="toggleNewKeyConfirm(true)">Generate New</button>
+                    </div>
                 </div>
             </div>
-            {% else %}
-            <p class="text-secondary">You have not generated an API key yet.</p>
-            <p class="small text-muted">Generate a key to use the API endpoints for programmatic video generation.</p>
-            {% endif %}
-            
-            <div id="generate-section" style="display: {% if api_key %}none{% else %}block{% endif %};">
-                <button id="generate-key-btn" class="btn btn-primary">
-                    {% if api_key %}Generate New Key{% else %}Generate API Key{% endif %}
-                </button>
+
+            <!-- No Key / Generate View -->
+            <div id="no-key-view" class="{% if api_key %}hidden{% endif %}">
+                <p class="text-secondary">You have not generated an API key yet.</p>
+                <p class="small text-muted">Generate a key to use the API endpoints for programmatic video generation.</p>
+                <button id="generate-key-btn" class="btn btn-primary">Generate API Key</button>
             </div>
 
-            <div id="confirm-new-key" style="display: none; margin-top: 1rem;" class="alert alert-warning">
+            <!-- Confirmation Dialog -->
+            <div id="confirm-new-key" class="alert alert-warning hidden mt-3">
                 <strong>Warning:</strong> Generating a new API key will invalidate your current key. This action cannot be undone.
                 <div class="mt-2">
                     <button class="btn btn-sm btn-danger me-2" onclick="generateNewKey()">Confirm & Generate</button>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="cancelNewKey()">Cancel</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="toggleNewKeyConfirm(false)">Cancel</button>
                 </div>
             </div>
         </div>
 
         <!-- Usage Stats -->
-        <div class="settings-card">
+        <div class="settings-card" id="usage-card">
             <h5 class="mb-3">Usage Information</h5>
             <div class="row g-3">
                 <div class="col-6">
@@ -142,6 +143,29 @@
     </div>
 
     <script>
+        // --- Utility Functions ---
+        function toggleNewKeyConfirm(show) {
+            const confirmDiv = document.getElementById('confirm-new-key');
+            const noKeyView = document.getElementById('no-key-view');
+            const existingKeyView = document.getElementById('existing-key-view');
+            
+            if (show) {
+                confirmDiv.classList.remove('hidden');
+                // Hide the buttons we are replacing
+                if (existingKeyView) existingKeyView.classList.add('hidden');
+                if (noKeyView) noKeyView.classList.add('hidden');
+            } else {
+                confirmDiv.classList.add('hidden');
+                // Restore views based on current state
+                const hasKey = '{{ api_key }}' !== 'None' && '{{ api_key }}' !== '';
+                if (hasKey) {
+                    existingKeyView.classList.remove('hidden');
+                } else {
+                    noKeyView.classList.remove('hidden');
+                }
+            }
+        }
+
         async function copyApiKey() {
             const key = document.getElementById('api-key-value').textContent;
             try {
@@ -161,15 +185,7 @@
             }
         }
 
-        function showNewKeyConfirm() {
-            document.getElementById('confirm-new-key').style.display = 'block';
-            document.getElementById('generate-section').style.display = 'none';
-        }
-
-        function cancelNewKey() {
-            document.getElementById('confirm-new-key').style.display = 'none';
-            document.getElementById('generate-section').style.display = 'block';
-        }
+        // --- API Interaction Functions ---
 
         async function generateNewKey() {
             try {
@@ -177,8 +193,13 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
                 });
+                
                 if (response.ok) {
+                    // Reload page to show new key and update UI
                     location.reload();
+                } else if (response.status === 401) {
+                    alert('Session expired. Please log in again.');
+                    window.location.href = '/login';
                 } else {
                     const data = await response.json();
                     alert('Failed: ' + (data.error || 'Unknown error'));
@@ -188,7 +209,6 @@
             }
         }
 
-        // Load usage stats
         async function loadUsageStats() {
             try {
                 const res = await fetch('/api/v1/usage');
@@ -196,14 +216,25 @@
                     const data = await res.json();
                     document.getElementById('total-jobs').textContent = data.total_jobs || 0;
                     document.getElementById('remaining-credits').textContent = data.credits_remaining || 0;
+                } else if (res.status === 401) {
+                    // User has no profile yet or unauthorized. Hide the section.
+                    document.getElementById('usage-card').classList.add('hidden');
                 }
             } catch (e) {
                 console.error('Could not load usage stats', e);
+                document.getElementById('usage-card').classList.add('hidden');
             }
         }
 
-        // Initial load
+        // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
+            // Wire up the Generate Button (since template logic might fail)
+            const btn = document.getElementById('generate-key-btn');
+            if (btn) {
+                btn.onclick = () => toggleNewKeyConfirm(true);
+            }
+
+            // Load stats
             loadUsageStats();
         });
     </script>

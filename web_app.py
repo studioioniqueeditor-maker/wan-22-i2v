@@ -50,6 +50,7 @@ from auth_service import AuthService
 # NEW IMPORTS FOR QUEUE SYSTEM
 from job_queue import JobQueue
 from api_router import api_bp, get_api_rate_limiter
+from concurrency_manager import ConcurrencyManager
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'temp_uploads'
@@ -420,6 +421,48 @@ def get_history_api():
 @app.route('/output/<filename>')
 def get_video(filename):
     return send_from_directory(app.config['OUTPUT_FOLDER'], filename)
+# --- Admin Routes ---
+
+@app.route('/admin', methods=['GET'])
+@login_required
+def admin_dashboard():
+    """Simple admin dashboard to approve users."""
+    # Check if current user is admin (basic check, use environment variable)
+    is_admin = os.getenv('ADMIN_EMAIL') == session.get('email')
+    if not is_admin:
+        return 'Access Denied', 403
+    
+    # Fetch pending users
+    pending = []
+    try:
+        pending = AuthService.list_pending_users()
+    except Exception as e:
+        print(f'Admin fetch error: {e}')
+    
+    # Fetch global stats
+    stats = ConcurrencyManager.get_instance().get_status()
+    
+    return render_template('admin.html', pending=pending, stats=stats, is_admin=True)
+
+@app.route('/admin/approve', methods=['POST'])
+@login_required
+def admin_approve_web():
+    """Web endpoint for approval."""
+    is_admin = os.getenv('ADMIN_EMAIL') == session.get('email')
+    if not is_admin:
+        return 'Access Denied', 403
+    
+    user_id = request.form.get('user_id')
+    if user_id:
+        AuthService.approve_user(user_id)
+    
+    return redirect(url_for('admin_dashboard'))
+
+
+
+
+# --- Admin Routes ---
+
 
 if __name__ == '__main__':
     # Initialize job queue worker

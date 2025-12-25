@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Vivid Flow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; padding: 20px; }
+        .card { margin-bottom: 20px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .stat-card { text-align: center; padding: 20px; }
+        .stat-number { font-size: 2rem; font-weight: bold; color: #0d6efd; }
+        .stat-label { color: #6c757d; font-size: 0.9rem; }
+        .live-indicator { 
+            display: inline-block; 
+            width: 8px; 
+            height: 8px; 
+            background: #dc3545; 
+            border-radius: 50%; 
+            animation: pulse 2s infinite;
+            margin-right: 5px;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .auto-refresh-toggle { display: flex; align-items: center; gap: 10px; }
+        .btn-refresh { animation: spin 1s linear infinite; display: none; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .badge-queued { background: #ffc107; color: #000; }
+        .badge-processing { background: #0d6efd; }
+        .badge-completed { background: #198754; }
+        .badge-failed { background: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1>Admin Dashboard</h1>
+                <div class="auto-refresh-toggle">
+                    <span class="live-indicator"></span>
+                    <small class="text-muted">Live Updates (refreshes every 5s)</small>
+                    <button id="refreshBtn" class="btn btn-sm btn-outline-secondary btn-refresh" onclick="manualRefresh()">↻</button>
+                </div>
+            </div>
+            <a href="/" class="btn btn-secondary">Back to App</a>
+        </div>
+
+        <!-- System Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-number" id="activeCount">0</div>
+                    <div class="stat-label">Active Jobs</div>
+                    <small class="text-muted">Running Now</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-number" id="queuedCount">0</div>
+                    <div class="stat-label">Queued Jobs</div>
+                    <small class="text-muted">Waiting to Process</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-number" id="userCount">0</div>
+                    <div class="stat-label">Active Users</div>
+                    <small class="text-muted">Concurrent Users</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-number" id="totalJobs">0</div>
+                    <div class="stat-label">Total Jobs</div>
+                    <small class="text-muted">All Time</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Stats -->
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <span>Job Queue Status</span>
+                <span class="badge bg-secondary" id="lastUpdate">Updated: Never</span>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col">
+                        <h4><span class="badge badge-queued" id="queuedBadge">0</span></h4>
+                        <p class="text-muted">Queued</p>
+                    </div>
+                    <div class="col">
+                        <h4><span class="badge badge-processing" id="processingBadge">0</span></h4>
+                        <p class="text-muted">Processing</p>
+                    </div>
+                    <div class="col">
+                        <h4><span class="badge badge-completed" id="completedBadge">0</span></h4>
+                        <p class="text-muted">Completed</p>
+                    </div>
+                    <div class="col">
+                        <h4><span class="badge badge-failed" id="failedBadge">0</span></h4>
+                        <p class="text-muted">Failed</p>
+                    </div>
+                    <div class="col">
+                        <h4><span class="badge bg-info" id="limitBadge">0/5</span></h4>
+                        <p class="text-muted">Global Limit</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Approvals -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                Pending User Approvals
+            </div>
+            <div class="card-body">
+                {% if pending and pending|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>User ID (Short)</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in pending %}
+                                <tr>
+                                    <td><code>{{ user.id[:16] }}...</code></td>
+                                    <td>
+                                        <form action="/admin/approve" method="POST" style="display:inline;">
+                                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                                            <button type="submit" class="btn btn-success btn-sm">
+                                                ✓ Approve
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <strong>Note:</strong> User emails are stored in auth.users table. 
+                        Check your Supabase dashboard (Authentication > Users) to see email addresses for these user IDs.
+                        <br><small>Current pending IDs shown above.</small>
+                    </div>
+                {% else %}
+                    <p class="text-success">✓ No pending users - all approved!</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- API Info -->
+        <div class="card mt-4">
+            <div class="card-header bg-secondary text-white">
+                Quick API Test
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Admin API Key:</strong>
+                        <code id="adminApiKey">{{ config.get('ADMIN_API_KEY', 'Not Set') }}</code>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Test Command:</strong>
+                        <code>curl -H "X-Admin-Key: YOUR_KEY" http://api/v1/admin/stats</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let autoRefresh = true;
+        
+        function updateStats(stats) {
+            if (!stats) return;
+            
+            // Update stat cards
+            document.getElementById('activeCount').textContent = stats.global_active || 0;
+            document.getElementById('queuedCount').textContent = stats.queued || 0;
+            document.getElementById('userCount').textContent = stats.active_users || 0;
+            document.getElementById('totalJobs').textContent = stats.total || 0;
+            
+            // Update badges
+            document.getElementById('queuedBadge').textContent = stats.queued || 0;
+            document.getElementById('processingBadge').textContent = stats.processing || 0;
+            document.getElementById('completedBadge').textContent = stats.completed || 0;
+            document.getElementById('failedBadge').textContent = stats.failed || 0;
+            
+            // Limit info
+            const limit = stats.concurrency?.global_limit || 5;
+            const active = stats.concurrency?.global_active || 0;
+            document.getElementById('limitBadge').textContent = `${active}/${limit}`;
+            
+            // Update timestamp
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = `Updated: ${now.toLocaleTimeString()}`;
+        }
+        
+        function fetchStats() {
+            if (!autoRefresh) return;
+            
+            // Show refresh animation
+            const btn = document.getElementById('refreshBtn');
+            btn.style.display = 'inline-block';
+            
+            fetch('/api/v1/admin/stats', {
+                headers: {
+                    'X-Admin-Key': '{{ config.get("ADMIN_API_KEY", "") }}'
+                }
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    return response.json();
+                }
+                throw new Error('Unauthorized or error');
+            })
+            .then(data => {
+                updateStats(data);
+                btn.style.display = 'none';
+            })
+            .catch(err => {
+                console.log('Auto-refresh: Not authorized or error:', err);
+                btn.style.display = 'none';
+                // Don't show error UI, just stop auto-refresh
+                autoRefresh = false;
+                document.querySelector('.live-indicator').style.background = '#6c757d';
+            });
+        }
+        
+        function manualRefresh() {
+            fetchStats();
+        }
+        
+        // Auto-refresh every 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial load
+            fetchStats();
+            
+            // Start auto-refresh
+            setInterval(fetchStats, 5000);
+        });
+    </script>
+</body>
+</html>

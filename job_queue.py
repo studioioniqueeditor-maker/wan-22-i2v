@@ -1,8 +1,5 @@
 """
-Job Queue System for Video Generation
-
-This module implements a robust job queue with status tracking, 
-retry mechanisms, and concurrency handling.
+Job Queue System with Concurrency Management
 """
 import json
 import uuid
@@ -17,6 +14,7 @@ from dataclasses import dataclass, asdict
 from google.cloud import storage
 from video_client_factory import VideoClientFactory
 from storage_service import StorageService
+from concurrency_manager import ConcurrencyManager
 import os
 
 logger = logging.getLogger("vividflow")
@@ -64,16 +62,14 @@ class JobQueue:
     _lock = threading.Lock()
     
     def __init__(self, db_path="jobs.db"):
-        """Initialize the job queue with SQLite database."""
         self.db_path = db_path
         self._init_db()
         self.worker_thread = None
-        self.active_jobs = {}  # Track currently processing jobs
+        self.active_jobs = {}
         self.stop_flag = False
         
     @classmethod
     def get_instance(cls, db_path="jobs.db"):
-        """Get singleton instance."""
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
@@ -81,7 +77,6 @@ class JobQueue:
         return cls._instance
     
     def _init_db(self):
-        """Initialize SQLite database for persistent job storage."""
         with sqlite3.connect(self.db_path) as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS jobs (
@@ -104,16 +99,11 @@ class JobQueue:
             conn.commit()
     
     def _save_job(self, job: Job):
-        """Persist job to database."""
         with sqlite3.connect(self.db_path) as conn:
             parameters_json = json.dumps(job.parameters) if job.parameters else None
             metrics_json = json.dumps(job.metrics) if job.metrics else None
-            
             conn.execute("""
                 INSERT OR REPLACE INTO jobs 
-                (job_id, user_id, model, status, created_at, updated_at,
-                 input_image_url, input_image_path, prompt, negative_prompt,
-                 parameters, result_url, error_message, metrics)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 job.job_id, job.user_id, job.model, job.status.value, 
@@ -125,114 +115,85 @@ class JobQueue:
             conn.commit()
     
     def _load_job(self, job_id: str) -> Optional[Job]:
-        """Load job from database."""
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
-            row = conn.execute(
-                "SELECT * FROM jobs WHERE job_id = ?", (job_id,)
-            ).fetchone()
-            
-            if not row:
-                return None
-            
+            row = conn.execute("SELECT * FROM jobs WHERE job_id = ?", (job_id,)).fetchone()
+            if not row: return None
             parameters = json.loads(row["parameters"]) if row["parameters"] else None
             metrics = json.loads(row["metrics"]) if row["metrics"] else None
-            
             return Job(
-                job_id=row["job_id"],
-                user_id=row["user_id"],
-                model=row["model"],
+                job_id=row["job_id"], user_id=row["user_id"], model=row["model"],
                 status=JobStatus(row["status"]),
                 created_at=datetime.fromisoformat(row["created_at"]),
                 updated_at=datetime.fromisoformat(row["updated_at"]),
-                input_image_url=row["input_image_url"],
-                input_image_path=row["input_image_path"],
-                prompt=row["prompt"],
-                negative_prompt=row["negative_prompt"],
-                parameters=parameters,
-                result_url=row["result_url"],
-                error_message=row["error_message"],
-                metrics=metrics
+                input_image_url=row["input_image_url"], input_image_path=row["input_image_path"],
+                prompt=row["prompt"], negative_prompt=row["negative_prompt"],
+                parameters=parameters, result_url=row["result_url"],
+                error_message=row["error_message"], metrics=metrics
             )
     
     def add_job(self, job_data: Dict[str, Any]) -> str:
-        """Add a new job to the queue."""
         job_id = str(uuid.uuid4())
-        
         job = Job(
-            job_id=job_id,
-            user_id=job_data["user_id"],
-            model=job_data["model"],
-            status=JobStatus.QUEUED,
-            created_at=datetime.now(),
-            updated_at=datetime.now(),
-            input_image_url=job_data.get("input_image_url"),
-            input_image_path=job_data.get("input_image_path"),
-            prompt=job_data["prompt"],
-            negative_prompt=job_data.get("negative_prompt", ""),
+            job_id=job_id, user_id=job_data["user_id"], model=job_data["model"],
+            status=JobStatus.QUEUED, created_at=datetime.now(), updated_at=datetime.now(),
+            input_image_url=job_data.get("input_image_url"), input_image_path=job_data.get("input_image_path"),
+            prompt=job_data["prompt"], negative_prompt=job_data.get("negative_prompt", ""),
             parameters=job_data.get("parameters", {})
         )
-        
         self._save_job(job)
-        logger.info(f"Job {job_id} added to queue for user {job.user_id}")
-        
-        # Start worker if not running
         self.start_worker()
-        
         return job_id
     
     def get_job(self, job_id: str) -> Optional[Job]:
-        """Get job status."""
-        # Check active jobs first (memory)
         if job_id in self.active_jobs:
             return self.active_jobs[job_id]
-        
-        # Load from database
         return self._load_job(job_id)
     
     def cancel_job(self, job_id: str) -> bool:
-        """Cancel a queued job."""
         job = self._load_job(job_id)
-        if not job:
-            return False
-        
+        if not job: return False
         if job.status == JobStatus.QUEUED:
             job.status = JobStatus.CANCELLED
             job.updated_at = datetime.now()
             self._save_job(job)
-            logger.info(f"Job {job_id} cancelled")
             return True
-        
         return False
     
     def _process_job(self, job: Job):
-        """Process a single job."""
+        concurrency = ConcurrencyManager.get_instance()
+        acquired = False
+        
         try:
-            # Update status to processing
+            # 1. Attempt to acquire concurrency slot
+            acquired = concurrency.acquire(job.user_id, job.job_id)
+            if not acquired:
+                logger.info(f"Job {job.job_id} waiting for slot. Skipping this cycle.")
+                # Sleep briefly to prevent tight loop if system is full
+                time.sleep(5)
+                return # Do not mark as failed, keep it queued
+            
+            # 2. Mark as Processing
             job.status = JobStatus.PROCESSING
             job.updated_at = datetime.now()
             self._save_job(job)
             self.active_jobs[job.job_id] = job
             
-            logger.info(f"Processing job {job.job_id} with model {job.model}")
+            logger.info(f"Processing job {job.job_id} for user {job.user_id}")
             
-            # Get appropriate client
+            # 3. Video Generation
             client = VideoClientFactory.get_client(
                 job.model,
                 runpod_endpoint_id=os.getenv("RUNPOD_ENDPOINT_ID"),
                 runpod_api_key=os.getenv("RUNPOD_API_KEY")
             )
             
-            # Handle input source
             image_path = job.input_image_path
             if job.input_image_url:
-                # Download from GCS
                 image_path = self._download_from_gcs(job.input_image_url)
             
-            if not image_path:
-                raise Exception("No valid image source provided")
+            if not image_path: raise Exception("No image source")
             
-            # Prepare generation parameters
             gen_params = {
                 "image_path": image_path,
                 "prompt": job.prompt,
@@ -240,30 +201,23 @@ class JobQueue:
                 **job.parameters
             }
             
-            # Start generation
             start_time = time.time()
             result = client.create_video_from_image(**gen_params)
-            generation_time = time.time() - start_time
+            gen_time = time.time() - start_time
             
             if result.get("status") == "COMPLETED":
-                # Save video result to GCS
                 video_data = result.get("output")
                 if video_data:
                     gcs_url = self._upload_video_to_gcs(job.job_id, video_data, job.model)
                     job.result_url = gcs_url
                     job.status = JobStatus.COMPLETED
-                    job.metrics = {
-                        "generation_time": generation_time,
-                        "spin_up_time": result.get("metrics", {}).get("spin_up_time", 0),
-                        "total_time": result.get("metrics", {}).get("generation_time", generation_time)
-                    }
+                    job.metrics = {"generation_time": gen_time}
                 else:
-                    raise Exception("No video data in result")
+                    raise Exception("No video data")
             else:
                 job.status = JobStatus.FAILED
                 job.error_message = result.get("error", "Unknown error")
             
-            # Cleanup input file if it was downloaded
             if job.input_image_url and image_path and os.path.exists(image_path):
                 os.remove(image_path)
                 
@@ -273,80 +227,19 @@ class JobQueue:
             job.error_message = str(e)
         
         finally:
+            # 4. Cleanup
+            if acquired:
+                concurrency.release(job.user_id, job.job_id)
+            
             job.updated_at = datetime.now()
             self._save_job(job)
             self.active_jobs.pop(job.job_id, None)
     
-    def _download_from_gcs(self, gcs_url: str) -> Optional[str]:
-        """Download image from GCS URL."""
-        try:
-            storage_client = storage.Client()
-            
-            # Parse gs:// URL
-            if gcs_url.startswith("gs://"):
-                # Format: gs://bucket/path/to/file
-                path = gcs_url[5:]  # Remove "gs://"
-                bucket_name, *blob_parts = path.split("/")
-                blob_name = "/".join(blob_parts)
-            else:
-                # Parse regular URL
-                # Format: https://storage.googleapis.com/bucket/path/to/file
-                import urllib.parse
-                parsed = urllib.parse.urlparse(gcs_url)
-                bucket_name = parsed.netloc.replace(".storage.googleapis.com", "")
-                blob_name = parsed.path.lstrip("/")
-            
-            bucket = storage_client.bucket(bucket_name)
-            blob = bucket.blob(blob_name)
-            
-            # Create temp file
-            import tempfile
-            temp_dir = tempfile.gettempdir()
-            filename = f"{uuid.uuid4()}_{os.path.basename(blob_name)}"
-            image_path = os.path.join(temp_dir, filename)
-            
-            blob.download_to_filename(image_path)
-            logger.info(f"Downloaded image from GCS to {image_path}")
-            return image_path
-            
-        except Exception as e:
-            logger.error(f"Failed to download from GCS: {e}")
-            return None
-    
-    def _upload_video_to_gcs(self, job_id: str, video_data: bytes, model: str) -> str:
-        """Upload generated video to GCS."""
-        try:
-            storage_service = StorageService()
-            
-            # Create filename
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"jobs/{job_id}_{model}_{timestamp}.mp4"
-            
-            # Save temporarily
-            import tempfile
-            temp_path = os.path.join(tempfile.gettempdir(), f"temp_{job_id}.mp4")
-            with open(temp_path, "wb") as f:
-                f.write(video_data)
-            
-            # Upload and get URL
-            gcs_url = storage_service.upload_file(temp_path, filename)
-            
-            # Cleanup temp file
-            os.remove(temp_path)
-            
-            return gcs_url
-            
-        except Exception as e:
-            logger.error(f"Failed to upload video to GCS: {e}")
-            raise
-    
     def _worker_loop(self):
-        """Main worker loop that processes queued jobs."""
         logger.info("Job queue worker started")
-        
         while not self.stop_flag:
             try:
-                # Find next queued job
+                # Find next QUEUED job
                 with sqlite3.connect(self.db_path) as conn:
                     conn.row_factory = sqlite3.Row
                     row = conn.execute(
@@ -355,36 +248,27 @@ class JobQueue:
                     ).fetchone()
                 
                 if row:
-                    # Load and process job
                     job = self._load_job(row["job_id"])
                     if job:
                         self._process_job(job)
                 else:
-                    # No jobs, wait a bit
                     time.sleep(2)
-                    
             except Exception as e:
                 logger.error(f"Worker loop error: {e}")
                 time.sleep(5)
-        
-        logger.info("Job queue worker stopped")
     
     def start_worker(self):
-        """Start the worker thread."""
         if self.worker_thread is None or not self.worker_thread.is_alive():
             self.stop_flag = False
             self.worker_thread = threading.Thread(target=self._worker_loop, daemon=True)
             self.worker_thread.start()
-            logger.info("Worker thread started")
     
     def stop_worker(self):
-        """Stop the worker thread."""
         self.stop_flag = True
         if self.worker_thread:
             self.worker_thread.join(timeout=5)
     
     def get_user_jobs(self, user_id: str, limit: int = 10) -> list:
-        """Get recent jobs for a user."""
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
             rows = conn.execute(
@@ -392,9 +276,68 @@ class JobQueue:
                 (user_id, limit)
             ).fetchall()
         
-        jobs = []
-        for row in rows:
-            job = self._load_job(row["job_id"])
-            if job:
-                jobs.append(job.to_dict())
-        return jobs
+        return [self._load_job(row["job_id"]).to_dict() for row in rows if self._load_job(row["job_id"])]
+    
+    def _download_from_gcs(self, gcs_url: str) -> Optional[str]:
+        try:
+            storage_client = storage.Client()
+            if gcs_url.startswith("gs://"):
+                path = gcs_url[5:]
+                bucket_name, *blob_parts = path.split("/")
+                blob_name = "/".join(blob_parts)
+            else:
+                import urllib.parse
+                parsed = urllib.parse.urlparse(gcs_url)
+                bucket_name = parsed.netloc.replace(".storage.googleapis.com", "")
+                blob_name = parsed.path.lstrip("/")
+            
+            bucket = storage_client.bucket(bucket_name)
+            blob = bucket.blob(blob_name)
+            
+            import tempfile
+            filename = f"{uuid.uuid4()}_{os.path.basename(blob_name)}"
+            image_path = os.path.join(tempfile.gettempdir(), filename)
+            blob.download_to_filename(image_path)
+            return image_path
+        except Exception as e:
+            logger.error(f"GCS download failed: {e}")
+            return None
+    
+    def _upload_video_to_gcs(self, job_id: str, video_data: bytes, model: str) -> str:
+        try:
+            storage_service = StorageService()
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"jobs/{job_id}_{model}_{timestamp}.mp4"
+            
+            import tempfile
+            temp_path = os.path.join(tempfile.gettempdir(), f"temp_{job_id}.mp4")
+            with open(temp_path, "wb") as f:
+                f.write(video_data)
+            
+            gcs_url = storage_service.upload_file(temp_path, filename)
+            os.remove(temp_path)
+            return gcs_url
+        except Exception as e:
+            logger.error(f"GCS upload failed: {e}")
+            return ""
+    
+    def get_all_jobs(self) -> list:
+        """Get all jobs for admin dashboard."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(
+                "SELECT * FROM jobs ORDER BY created_at DESC LIMIT 100"
+            ).fetchall()
+        
+        return [self._load_job(row["job_id"]).to_dict() for row in rows if self._load_job(row["job_id"])]
+    
+    def get_queue_stats(self) -> dict:
+        """Get queue statistics."""
+        jobs = self.get_all_jobs()
+        return {
+            "total": len(jobs),
+            "queued": len([j for j in jobs if j['status'] == 'queued']),
+            "processing": len([j for j in jobs if j['status'] == 'processing']),
+            "completed": len([j for j in jobs if j['status'] == 'completed']),
+            "failed": len([j for j in jobs if j['status'] == 'failed'])
+        }
