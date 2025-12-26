@@ -60,11 +60,11 @@ def poll_job_status(job_id):
 
 # --- Prepare Form Data ---
 payload = {
-    "prompt": "dolly zoom in, no character movement, cinematic shot",
+    "prompt": "slow dolly zoom in, cinematic shot, character is still",
     "model": "veo3.1",
     "duration_seconds": 4,
-    "camera_motion" : "dolly zoom in",
-    "enhance_prompt" : 'true'
+    "camera_motion" : "dolly in",
+    "enhance_prompt" : 'true',
 }
 
 # --- Open the image file in binary mode ---

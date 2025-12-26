@@ -247,6 +247,25 @@ def _run_video_generation(user_id, file, form_data):
 
 # --- Routes ---
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint for Docker/Kubernetes."""
+    try:
+        # Verify database connection
+        queue = JobQueue.get_instance()
+        queue.get_queue_stats()
+        
+        return jsonify({
+            "status": "healthy",
+            "service": "vivid-flow",
+            "timestamp": datetime.datetime.now().isoformat(),
+            "queue_worker": queue.worker_thread.is_alive() if queue.worker_thread else False
+        }), 200
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
+        return jsonify({"status": "unhealthy", "error": str(e)}), 503
+
+
 @app.route('/', methods=['GET'])
 @login_required
 def index():
