@@ -32,7 +32,8 @@ def api_key_required(f):
         request_id = str(uuid.uuid4())[:8]
         logger.info(f"[{request_id}] API request: {request.method} {request.path} | Headers: {dict(request.headers)}")
         
-        api_key = request.headers.get('X-API-Key')
+        # Check for API key in header or query parameter (for browser access)
+        api_key = request.headers.get('X-API-Key') or request.args.get('api_key')
         if not api_key:
             logger.warning(f"[{request_id}] Missing API key from {request.remote_addr}")
             return jsonify({"error": "API key is missing", "request_id": request_id}), 401

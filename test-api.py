@@ -4,7 +4,7 @@ import time
 
 # --- Configuration ---
 API_KEY = "vivid-api-key-c8ad8e57-367f-4170-ab0b-c8ec1b443a8e"
-IMAGE_PATH = "/Users/aditya/Downloads/fern ss/Screenshot 2025-11-14 at 3.28.55 PM.png"
+IMAGE_PATH = "/Users/aditya/Downloads/fern ss/Screenshot 2025-11-14 at 3.55.29 PM.png"
 API_URL = "https://vivid.studioionique.com/api/v1/generate"
 STATUS_URL_TEMPLATE = "https://vivid.studioionique.com/api/v1/status/{}"
 
@@ -63,8 +63,9 @@ payload = {
     "prompt": "slow dolly zoom in, cinematic shot, character is still",
     "model": "veo3.1",
     "duration_seconds": 4,
-    "camera_motion" : "dolly in",
-    "enhance_prompt" : 'true',
+    "camera_motion": "Dolly (In)",
+    "enhance_prompt": "true",  # REQUIRED by Veo 3 - cannot be disabled
+    # add_keywords is NOT set, so defaults to False - won't add our own keywords
 }
 
 # --- Open the image file in binary mode ---
@@ -81,7 +82,7 @@ try:
             job_data = response.json()
             job_id = job_data.get('job_id')
             print(f"✅ Job accepted! Job ID: {job_id}")
-            
+
             video_url = poll_job_status(job_id)
             if video_url:
                 print(f"🎬 Video ready: {video_url}")
@@ -89,7 +90,11 @@ try:
                 print("❌ Job failed or could not retrieve URL.")
         else:
             print(f"❌ Error: {response.status_code}")
-            print(response.text)
+            print(f"Response: {response.text}")
+            try:
+                print(f"JSON: {response.json()}")
+            except:
+                pass
 
 except FileNotFoundError:
     print(f"Error: The file '{IMAGE_PATH}' was not found.")

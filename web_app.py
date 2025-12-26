@@ -493,6 +493,6 @@ if __name__ == '__main__':
         logger.error(f"Failed to initialize job queue: {e}")
     
     try:
-        app.run(debug=True, port=5000)
+        app.run(debug=True, port=8000)
     except Exception as e:
         logger.error(f"Failed to start app: {e}", exc_info=True)
