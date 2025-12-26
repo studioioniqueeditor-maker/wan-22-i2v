@@ -10,7 +10,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Dict, Optional, Any
 import sqlite3
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from google.cloud import storage
 from video_client_factory import VideoClientFactory
 from storage_service import StorageService
@@ -38,7 +38,7 @@ class Job:
     input_image_path: Optional[str] = None
     prompt: str = ""
     negative_prompt: str = ""
-    parameters: Dict[str, Any] = None
+    parameters: Optional[Dict[str, Any]] = None
     result_url: Optional[str] = None
     error_message: Optional[str] = None
     metrics: Optional[Dict[str, float]] = None
@@ -198,7 +198,7 @@ class JobQueue:
                 "image_path": image_path,
                 "prompt": job.prompt,
                 "negative_prompt": job.negative_prompt,
-                **job.parameters
+                **(job.parameters or {})
             }
             
             start_time = time.time()

@@ -102,16 +102,41 @@ class VertexAIVeoClient(IVideoClient):
                 time.sleep(5)
                 operation = client.operations.get(operation)
 
-            if operation.error:
-                return {"status": "FAILED", "error": f"Veo API Error: {operation.error.message} (Code: {operation.error.code})"}
+            logger.info(f"Video generation operation completed (Job ID: {operation.name})")
 
-            if operation.result and operation.result.generated_videos:
-                video_data = operation.result.generated_videos[0].video.video_bytes
-                return {"status": "COMPLETED", "output": video_data}
+            # Check for errors
+            if hasattr(operation, 'error') and operation.error:
+                error_msg = getattr(operation.error, 'message', str(operation.error))
+                error_code = getattr(operation.error, 'code', 'N/A')
+                logger.error(f"Veo API Error: {error_msg} (Code: {error_code})")
+                return {"status": "FAILED", "error": f"Veo API Error: {error_msg} (Code: {error_code})"}
+
+            # Check for successful result
+            if hasattr(operation, 'result') and operation.result:
+                if hasattr(operation.result, 'generated_videos') and operation.result.generated_videos:
+                    if len(operation.result.generated_videos) > 0:
+                        generated_video = operation.result.generated_videos[0]
+                        if hasattr(generated_video, 'video') and generated_video.video:
+                            if hasattr(generated_video.video, 'video_bytes'):
+                                video_data = generated_video.video.video_bytes
+                                logger.info(f"Successfully extracted video data ({len(video_data)} bytes)")
+                                return {"status": "COMPLETED", "output": video_data}
+                            else:
+                                logger.error("Generated video missing video_bytes attribute")
+                        else:
+                            logger.error("Generated video missing video attribute")
+                    else:
+                        logger.error("Generated videos list is empty")
+                else:
+                    logger.error("Operation result missing generated_videos")
             else:
-                return {"status": "FAILED", "error": f"Video generation returned no results for prompt: {final_prompt[:50]}..."}
+                logger.error("Operation missing result attribute")
+            
+            # If we get here, something went wrong
+            return {"status": "FAILED", "error": f"Video generation returned no results for prompt: {final_prompt[:50]}..."}
 
         except Exception as e:
+            logger.error(f"Exception during Veo video generation: {e}", exc_info=True)
             return {"status": "FAILED", "error": str(e)}
 
     def save_video_result(self, result, output_path):
