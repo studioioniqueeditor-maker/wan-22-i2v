@@ -1,16 +1,34 @@
-# Vivid Flow API Documentation (v1.2)
+# Vivid Flow API Documentation (v2.0)
 
 Welcome to the Vivid Flow API! This guide provides everything you need to integrate our powerful video generation capabilities into your own applications.
 
-**Base URL:** `https://vivid.studioionique.com/api/v1`
+**Base URLs:**
+- **Production:** `https://vivid.studioionique.com/api/v1`
+- **Local Development:** `http://localhost:8000/api/v1`
+
+> ⚠️ **Port Change:** Local development now uses port **8000** (changed from 5000 to avoid macOS AirPlay conflicts)
 
 ---
 
 ## Authentication
 
-Authentication is handled via API keys. You must include your key in the `X-API-Key` header with every request.
+Authentication is handled via API keys. You can provide your key in two ways:
 
-`X-API-Key: your_generated_api_key`
+### 1. Header Authentication (Recommended)
+Include your key in the `X-API-Key` header with every request:
+
+```
+X-API-Key: your_generated_api_key
+```
+
+### 2. Query Parameter Authentication (Browser-friendly)
+For browser access to status URLs, include the API key as a query parameter:
+
+```
+https://vivid.studioionique.com/api/v1/status/job-id?api_key=your_generated_api_key
+```
+
+> **Note:** Header authentication is recommended for API clients. Query parameter authentication is useful for accessing status URLs directly in a browser.
 
 You can generate and manage your API keys from your **Account** page in the Vivid Flow web UI.
 
@@ -40,7 +58,8 @@ headers = {
 payload = {
     "prompt": "A cinematic, wide shot of a futuristic city at dusk",
     "model": "veo3.1",
-    "duration_seconds": 8
+    "duration_seconds": 8,
+    "enhance_prompt": "true"  # REQUIRED for Veo 3.1 - cannot be false
 }
 
 # --- Open the image file in binary mode ---
@@ -90,6 +109,7 @@ const form = new FormData();
 form.append('prompt', 'A cinematic, wide shot of a futuristic city at dusk');
 form.append('model', 'veo3.1');
 form.append('duration_seconds', '8');
+form.append('enhance_prompt', 'true');  // REQUIRED for Veo 3.1
 
 // --- Append the image file ---
 try {
@@ -159,14 +179,20 @@ Starts a new video generation job. This endpoint is asynchronous; it returns a j
 
 | Parameter | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `duration_seconds`| Integer | `4` | The length of the video in seconds. (e.g., `4`, `6`, `8`). |
+| `duration_seconds`| Integer | `4` | The length of the video in seconds. (e.g., `4`, `8`). |
 | `resolution` | String | `720p` | The video resolution (`720p` or `1080p`). |
-| `camera_motion`| String | `None`| Describes camera movement (e.g., "Dolly (In)"). |
+| `camera_motion`| String | `None`| Describes camera movement (e.g., "Dolly (In)", "Pan (Right)"). |
 | `subject_animation`| String | `None`| Describes subject motion. |
 | `environmental_animation`| String | `None`| Describes environmental effects. |
 | `person_generation`| String | `allow_adult`| Policy for generating people (`allow_adult`, `allow_all`, `deny`). |
 | `generate_audio`| Boolean | `false`| Whether to generate audio for the video. |
-| `enhance_prompt`| Boolean | `false`| Whether to use Google's prompt enhancement. |
+| `enhance_prompt`| Boolean | **REQUIRED: `true`** | ⚠️ **MUST be `true`** - Google Veo 3 requires prompt enhancement. Setting to `false` will result in an error. |
+| `add_keywords`| Boolean | `false` | ⚠️ **Do NOT set to `true`** - Deprecated parameter that can trigger RAI filters. Omit this parameter. |
+
+> ⚠️ **Important Notes:**
+> - **`enhance_prompt` MUST be `true`**: Google's Veo 3.1 API requires prompt enhancement and will return an error if set to `false`.
+> - **Do NOT use `add_keywords`**: This parameter is deprecated and can cause Responsible AI filtering issues. Always omit it or keep it `false`.
+> - **Prompts are not modified**: Your prompts are sent unchanged to Google's API, which handles all enhancement internally.
 
 
 **Success Response (202 Accepted):**
@@ -267,8 +293,11 @@ The API uses standard HTTP status codes to indicate the success or failure of a 
 | `202 Accepted`| The asynchronous job was successfully created. |
 | `400 Bad Request` | Missing or invalid parameters in your request. |
 | `401 Unauthorized`| Your API key is missing or invalid. |
+| `403 Forbidden` | Your account is pending approval or you lack permissions. |
 | `429 Too Many Requests`| You have exceeded the rate limit. |
 | `500 Internal Server Error`| An unexpected error occurred on our end. |
+
+### Common Error Scenarios
 
 **Example Error Response (`400 Bad Request`):**
 
@@ -277,3 +306,153 @@ The API uses standard HTTP status codes to indicate the success or failure of a 
   "error": "No image file provided"
 }
 ```
+
+**Example Error Response (`401 Unauthorized`):**
+
+```json
+{
+  "error": "API key is missing",
+  "request_id": "abc123"
+}
+```
+
+**Example Job Failure (Veo 3.1 - enhance_prompt error):**
+
+```json
+{
+  "job_id": "...",
+  "status": "FAILED",
+  "error": "Veo 3 prompt enhancement cannot be disabled."
+}
+```
+
+**Example Job Failure (RAI Filtering):**
+
+```json
+{
+  "job_id": "...",
+  "status": "FAILED",
+  "error": "Content blocked by Responsible AI filters: Veo could not generate videos based on the prompt provided.",
+  "error_type": "RAI_FILTER"
+}
+```
+
+### Responsible AI (RAI) Filtering
+
+Google's Veo API includes safety filters that may block certain content. If your job fails with an RAI filtering error:
+
+**Common Causes:**
+- Prompts containing celebrity names, brand names, or copyrighted characters
+- Images with identifiable people (without proper consent)
+- Violent, inappropriate, or unsafe content
+- Trademarked logos or copyrighted material
+
+**Solutions:**
+- Use generic descriptions instead of specific names (e.g., "a singer" instead of "Taylor Swift")
+- Ensure images don't contain identifiable people or logos
+- Avoid violent or inappropriate content
+- Test your prompt in Google's Veo web interface first
+- Review our RAI Filtering Guide for best practices
+
+**What Works:**
+```json
+{
+  "prompt": "A futuristic city at dusk with flying vehicles",
+  "enhance_prompt": "true"
+}
+```
+
+**What May Be Filtered:**
+```json
+{
+  "prompt": "Iron Man flying through New York City",  // Copyrighted character
+  "enhance_prompt": "true"
+}
+```
+
+---
+
+## Best Practices
+
+### For Successful Video Generation
+
+1. **Always set `enhance_prompt=true`** for Veo 3.1 (required by Google)
+2. **Never set `add_keywords=true`** (deprecated, causes RAI filtering)
+3. **Use generic descriptions** instead of specific names/brands
+4. **Test prompts first** in Google's Veo web interface
+5. **Avoid identifiable people** in source images (without consent)
+6. **Keep prompts concise** and focused on visual elements
+7. **Poll status reasonably** (every 5-10 seconds, not more frequently)
+
+### For Reliable API Integration
+
+1. **Implement retry logic** for transient failures
+2. **Handle all error types** (authentication, validation, RAI filtering)
+3. **Use header authentication** for API clients (more secure than query params)
+4. **Log request IDs** for debugging (included in error responses)
+5. **Set appropriate timeouts** (video generation can take 30-60 seconds)
+6. **Validate inputs** before submission (check image size, format, etc.)
+
+---
+
+## Version History
+
+### v2.0 (2025-12-27)
+
+**Breaking Changes:**
+- Port changed from 5000 to 8000 for local development (avoid macOS AirPlay conflicts)
+- `enhance_prompt` is now REQUIRED to be `true` for Veo 3.1 (Google requirement)
+- `add_keywords` parameter deprecated (causes RAI filtering issues)
+
+**New Features:**
+- Query parameter authentication for browser-friendly status URL access
+- Enhanced error responses with error types (RAI_FILTER, API_ERROR, etc.)
+- Improved RAI filtering detection and error messages
+
+**Improvements:**
+- Prompts are no longer automatically modified (sent unchanged to Google)
+- Better documentation of Veo 3.1 requirements
+- Added comprehensive RAI filtering guidance
+- Updated all code examples with correct configuration
+
+**Migration from v1.x:**
+1. Update base URL port from 5000 to 8000 (local development)
+2. Set `enhance_prompt: "true"` in all Veo 3.1 requests
+3. Remove any `add_keywords: true` parameters
+4. Update error handling to check for `error_type` field
+
+### v1.2 (Previous)
+- Initial documented API version
+- Support for Wan 2.1 and Veo 3.1 models
+- Basic job queue and status checking
+
+---
+
+## Support & Additional Resources
+
+**Documentation:**
+- Implementation Guide: See `IMPLEMENTATION_GUIDE.md` in the repository
+- Quick Reference: See `QUICK_REFERENCE.md`
+- RAI Filtering Guide: See `RAI_FILTERING_GUIDE.md`
+
+**Getting Help:**
+- Check your API key is valid and approved
+- Review error messages and status codes
+- Check application logs for detailed error information
+- Test prompts in Google's Veo web interface first
+
+**Rate Limits:**
+- Contact us for current rate limit information
+- Rate limits are per API key
+- 429 status code indicates rate limit exceeded
+
+**Support Contact:**
+- For API issues: Check documentation first
+- For account issues: Contact via your account page
+
+---
+
+**End of API Documentation**
+
+*Last Updated: 2025-12-27*
+*Version: 2.0*

@@ -151,6 +151,7 @@ def _run_video_generation(user_id, file, form_data):
     environmental_animation = form_data.get('environmental_animation', 'None')
     duration_seconds = int(form_data.get('duration', 4))
     auto_enhance = form_data.get('auto_enhance') == 'true'
+    aspect_ratio = form_data.get('aspect_ratio', '16:9')
 
     image_path = None
     try:
@@ -182,9 +183,9 @@ def _run_video_generation(user_id, file, form_data):
             "image_path": image_path,
             "prompt": prompt,
             "negative_prompt": negative_prompt,
-            "width": 1280, 
-            "height": 720, 
-            "length": 81,  
+            "width": 1280,
+            "height": 720,
+            "length": 81,
             "steps": 30,
             "seed": 42,
             "cfg": cfg,
@@ -192,7 +193,8 @@ def _run_video_generation(user_id, file, form_data):
             "subject_animation": subject_animation,
             "environmental_animation": environmental_animation,
             "duration_seconds": duration_seconds,
-            "enhance_prompt": auto_enhance
+            "enhance_prompt": auto_enhance,
+            "aspect_ratio": aspect_ratio
         }
 
         logger.info(f"Starting generation with params: {generation_params}")

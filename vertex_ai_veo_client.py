@@ -204,6 +204,7 @@ class VertexAIVeoClient(IVideoClient):
             duration_seconds = int(kwargs.get('duration_seconds', 4))
             enhance_prompt_flag = kwargs.get('enhance_prompt', False)
             add_keywords = kwargs.get('add_keywords', False)  # NEW: Control keyword injection
+            aspect_ratio = kwargs.get('aspect_ratio', "16:9")
 
             logger.info(f"[Veo:{self.client_id}][Op:{operation_id}] Parameters extracted:")
             logger.info(f"[Veo:{self.client_id}][Op:{operation_id}]   Duration: {duration_seconds}s")
@@ -261,14 +262,14 @@ class VertexAIVeoClient(IVideoClient):
                 image_obj = types.Image(gcs_uri=gcs_uri, mime_type=mime_type)
                 
                 operation = client.models.generate_videos(
-                    model="veo-3.1-fast-generate-001", 
+                    model="veo-3.1-fast-generate-001",
                     prompt=final_prompt,
-                    image=image_obj, 
+                    image=image_obj,
                     config=types.GenerateVideosConfig(
-                        aspect_ratio="16:9", 
+                        aspect_ratio=aspect_ratio,
                         number_of_videos=1,
                         duration_seconds=duration_seconds,
-                        resolution="720p", 
+                        resolution="720p",
                         person_generation="allow_adult",
                         enhance_prompt=enhance_prompt_flag,
                         generate_audio=False,
