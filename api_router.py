@@ -133,6 +133,7 @@ def validate_parameters(model, form_data):
             params['camera_motion'] = form_data.get('camera_motion', 'None')
             params['enhance_prompt'] = form_data.get('enhance_prompt', 'false').lower() == 'true'
             params['aspect_ratio'] = form_data.get('aspect_ratio', '16:9')
+            params['generate_audio'] = form_data.get('generate_audio', 'false').lower() == 'true'  # NEW: Audio support
             logger.info(f"[{request_id}] Veo 3.1 parameters: {params}")
         elif model == "wan2.1":
             params['negative_prompt'] = form_data.get('negative_prompt', 'low quality')

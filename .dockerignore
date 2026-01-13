@@ -1,0 +1,43 @@
+# Git files
+.git
+.gitignore
+.github
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+.pytest_cache
+.coverage
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+
+# Environment files (will be set as env vars in deployment)
+.env
+.env.client
+
+# Local development
+logs/
+output/
+temp_uploads/
+venv/
+.venv/
+
+# Documentation (not needed in container)
+*.md
+!README.md
+
+# IMPORTANT: DO NOT ignore gcs-key.json - it's needed for Docker/local
+# For Cloud Run, use Workload Identity instead

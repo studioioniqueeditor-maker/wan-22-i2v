@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,7 +23,7 @@
             --radius-md: 12px;
         }
 
-        body { 
+        body {
             background-color: var(--card-bg);
             color: var(--text-primary);
             font-family: 'Inter', sans-serif;
@@ -39,17 +40,22 @@
             padding: 1.5rem 2rem;
         }
 
-        h1 { font-weight: 700; font-size: 1.4rem; letter-spacing: -0.03em; }
-        
-        .form-label { 
-            color: var(--text-secondary); 
-            font-weight: 600; 
-            font-size: 0.7rem; 
+        h1 {
+            font-weight: 700;
+            font-size: 1.4rem;
+            letter-spacing: -0.03em;
+        }
+
+        .form-label {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.7rem;
             margin-bottom: 0.25rem;
             text-transform: uppercase;
         }
-        
-        .form-control, .form-select {
+
+        .form-control,
+        .form-select {
             background-color: var(--input-bg);
             border: 1px solid transparent;
             border-radius: var(--radius-md);
@@ -57,7 +63,9 @@
             font-size: 0.85rem;
             transition: all 0.2s ease;
         }
-        .form-control:focus, .form-select:focus {
+
+        .form-control:focus,
+        .form-select:focus {
             background-color: #FFFFFF;
             border-color: var(--accent-blue);
             box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
@@ -85,16 +93,30 @@
             justify-content: center;
             border: 1px solid var(--border-color);
         }
-        
-        .drop-zone-content { text-align: center; color: var(--text-secondary); z-index: 5; }
+
+        .drop-zone-content {
+            text-align: center;
+            color: var(--text-secondary);
+            z-index: 5;
+        }
+
         .drop-zone-input {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            opacity: 0; cursor: pointer; z-index: 10;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 10;
         }
+
         .preview-img {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             object-fit: contain;
             display: none;
             z-index: 6;
@@ -116,14 +138,21 @@
             justify-content: space-between;
             margin-bottom: 0.8rem;
         }
-        .enhance-toggle-card .title { font-size: 0.75rem; font-weight: 700; }
+
+        .enhance-toggle-card .title {
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
 
         /* Enhance Button */
-        .prompt-wrapper { position: relative; }
+        .prompt-wrapper {
+            position: relative;
+        }
+
         #enhance-btn {
-            position: absolute; 
-            top: 50%; 
-            right: 8px; 
+            position: absolute;
+            top: 50%;
+            right: 8px;
             transform: translateY(-50%);
             z-index: 15;
             font-size: 0.65rem;
@@ -133,38 +162,66 @@
 
         /* Animations */
         @keyframes enhance-glow {
-            0% { box-shadow: 0 0 0 0 rgba(0, 113, 227, 0.4); }
-            50% { box-shadow: 0 0 15px 2px rgba(0, 113, 227, 0.2); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 113, 227, 0.4); }
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 113, 227, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 15px 2px rgba(0, 113, 227, 0.2);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 113, 227, 0.4);
+            }
         }
-        .enhancing { animation: enhance-glow 1.5s infinite; border-color: var(--accent-blue) !important; }
+
+        .enhancing {
+            animation: enhance-glow 1.5s infinite;
+            border-color: var(--accent-blue) !important;
+        }
 
         @keyframes scanline {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(100%); }
+            0% {
+                transform: translateY(-100%);
+            }
+
+            100% {
+                transform: translateY(100%);
+            }
         }
+
         .loading-scan {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 4px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
             background: linear-gradient(to right, transparent, var(--accent-blue), transparent);
             animation: scanline 2s linear infinite;
             z-index: 35;
         }
 
         /* Layout */
-        .content-row { height: calc(100vh - 100px); }
+        .content-row {
+            height: calc(100vh - 100px);
+        }
+
         .col-scroll {
             height: 100%;
             overflow-y: auto;
             padding-right: 12px;
             scrollbar-width: none;
         }
-        .col-scroll::-webkit-scrollbar { display: none; }
+
+        .col-scroll::-webkit-scrollbar {
+            display: none;
+        }
 
         #loading {
             position: absolute;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
             display: none;
             flex-direction: column;
             align-items: center;
@@ -182,7 +239,10 @@
             cursor: pointer;
             border: 1px solid #EEE;
         }
-        .history-card:hover { border-color: var(--accent-blue); }
+
+        .history-card:hover {
+            border-color: var(--accent-blue);
+        }
 
         .badge-pro {
             background: var(--accent-black);
@@ -193,43 +253,54 @@
             border-radius: 3px;
             margin-left: 0.4rem;
         }
-        
-        .mb-3 { margin-bottom: 0.75rem !important; }
+
+        .mb-3 {
+            margin-bottom: 0.75rem !important;
+        }
 
         .btn-white {
             background-color: #FFFFFF;
             color: var(--text-primary);
             border: 1px solid var(--border-color);
         }
+
         .btn-white:hover {
             background-color: #F5F5F7;
             color: var(--text-primary);
         }
-        
+
         #reset-btn {
             width: 140px;
         }
-        
+
         #reset-btn:hover {
             background-color: #e9ecef;
             color: #000;
         }
     </style>
 </head>
+
 <body>
     <div class="app-wrapper">
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4 flex-shrink-0">
             <h1 class="mb-0">Vivid Flow<span class="badge-pro">PRO</span></h1>
             <div class="dropdown">
-                <button class="btn btn-light border rounded-pill dropdown-toggle px-3 py-1 d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                <button
+                    class="btn btn-light border rounded-pill dropdown-toggle px-3 py-1 d-flex align-items-center gap-2"
+                    type="button" data-bs-toggle="dropdown">
                     <span class="small fw-semibold">{{ user_email }}</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2">
                     <li><a class="dropdown-item py-2 small" href="/account">Account Settings</a></li>
                     <li><a class="dropdown-item py-2 small" href="/history">History</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><form action="/logout" method="POST" class="m-0"><button type="submit" class="dropdown-item py-2 small text-danger">Log Out</button></form></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li>
+                        <form action="/logout" method="POST" class="m-0"><button type="submit"
+                                class="dropdown-item py-2 small text-danger">Log Out</button></form>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -250,8 +321,10 @@
                         <div class="mb-3">
                             <label class="form-label">Creative Prompt</label>
                             <div class="prompt-wrapper">
-                                <textarea class="form-control" id="prompt" name="prompt" rows="2" required style="padding-right: 85px;" placeholder="A cinematic shot of..."></textarea>
-                                <button type="button" id="enhance-btn" class="btn btn-sm btn-white border rounded-pill shadow-sm" style="display: none;">
+                                <textarea class="form-control" id="prompt" name="prompt" rows="2" required
+                                    style="padding-right: 85px;" placeholder="A cinematic shot of..."></textarea>
+                                <button type="button" id="enhance-btn"
+                                    class="btn btn-sm btn-white border rounded-pill shadow-sm" style="display: none;">
                                     ✨ ENHANCE
                                 </button>
                             </div>
@@ -266,17 +339,23 @@
                             <div class="mb-3">
                                 <label class="form-label">Aspect Ratio</label>
                                 <div class="btn-group w-100" role="group">
-                                    <input type="radio" class="btn-check" name="aspect_ratio" id="aspect_16_9" value="16:9" checked>
+                                    <input type="radio" class="btn-check" name="aspect_ratio" id="aspect_16_9"
+                                        value="16:9" checked>
                                     <label class="btn btn-outline-secondary" for="aspect_16_9">16:9</label>
-                                    <input type="radio" class="btn-check" name="aspect_ratio" id="aspect_9_16" value="9:16">
+                                    <input type="radio" class="btn-check" name="aspect_ratio" id="aspect_9_16"
+                                        value="9:16">
                                     <label class="btn btn-outline-secondary" for="aspect_9_16">9:16</label>
                                 </div>
                             </div>
 
+                            <!-- Auto-enhance enabled by default (hidden) -->
+                            <input type="hidden" name="auto_enhance" value="true">
+
                             <div class="enhance-toggle-card">
-                                <div class="title">Auto-Enhance Prompt</div>
+                                <div class="title">Generate Audio 🔊</div>
                                 <div class="form-check form-switch m-0">
-                                    <input class="form-check-input" type="checkbox" role="switch" id="auto_enhance_toggle" name="auto_enhance" value="true">
+                                    <input class="form-check-input" type="checkbox" role="switch"
+                                        id="generate_audio_toggle" name="generate_audio" value="true">
                                 </div>
                             </div>
 
@@ -286,10 +365,14 @@
                                     <div class="col-6">
                                         <select class="form-select form-select-sm" id="camera_category">
                                             <option value="None">None</option>
-                                            <option value="Dolly">Dolly</option><option value="Zoom">Zoom</option>
-                                            <option value="Pan">Pan</option><option value="Vertigo">Vertigo</option>
-                                            <option value="OverTheShoulder">OTS</option><option value="POV">POV</option>
-                                            <option value="Truck">Truck</option><option value="Tilt">Tilt</option>
+                                            <option value="Dolly">Dolly</option>
+                                            <option value="Zoom">Zoom</option>
+                                            <option value="Pan">Pan</option>
+                                            <option value="Vertigo">Vertigo</option>
+                                            <option value="OverTheShoulder">OTS</option>
+                                            <option value="POV">POV</option>
+                                            <option value="Truck">Truck</option>
+                                            <option value="Tilt">Tilt</option>
                                             <option value="Others">Others</option>
                                         </select>
                                     </div>
@@ -305,11 +388,14 @@
                                     <option value="None">None</option>
                                     <option value="The subject's head turns slowly">Head turn</option>
                                     <option value="The subject blinks slowly">Blinks</option>
-                                    <option value="The subject's hair and clothes flutter gently in the wind">Wind flutter</option>
+                                    <option value="The subject's hair and clothes flutter gently in the wind">Wind
+                                        flutter
+                                    </option>
                                     <option value="A subtle smile appears on the subject's face">Subtle smile</option>
                                     <option value="Other">Other...</option>
                                 </select>
-                                <input type="text" class="form-control form-control-sm" id="subject_animation_custom" placeholder="Describe motion..." style="display: none;">
+                                <input type="text" class="form-control form-control-sm" id="subject_animation_custom"
+                                    placeholder="Describe motion..." style="display: none;">
                             </div>
 
                             <div class="mb-3">
@@ -324,20 +410,25 @@
                                     <option value="Reflections move on water">Water movement</option>
                                     <option value="Other">Other...</option>
                                 </select>
-                                <input type="text" class="form-control form-control-sm" id="environmental_animation_custom" placeholder="Describe environment..." style="display: none;">
+                                <input type="text" class="form-control form-control-sm"
+                                    id="environmental_animation_custom" placeholder="Describe environment..."
+                                    style="display: none;">
                             </div>
                         </div>
-                        
+
                         <div id="wan-options">
                             <div class="mb-3">
                                 <label class="form-label">Negative Constraints</label>
-                                <textarea class="form-control" id="negative_prompt" name="negative_prompt" rows="2" placeholder="blurry, low quality..."></textarea>
+                                <textarea class="form-control" id="negative_prompt" name="negative_prompt" rows="2"
+                                    placeholder="blurry, low quality..."></textarea>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label d-flex justify-content-between">
                                     Motion Scale <span id="cfg-value" class="text-primary fw-bold">7.5</span>
                                 </label>
-                                <input type="range" class="form-range" id="cfg" name="cfg" min="1.0" max="20.0" step="0.5" value="7.5" oninput="document.getElementById('cfg-value').textContent = this.value">
+                                <input type="range" class="form-range" id="cfg" name="cfg" min="1.0" max="20.0"
+                                    step="0.5" value="7.5"
+                                    oninput="document.getElementById('cfg-value').textContent = this.value">
                             </div>
                         </div>
 
@@ -351,15 +442,17 @@
                             </div>
                             <div class="col-6">
                                 <label class="form-label">Duration</label>
-                                <select class="form-select form-select-sm" name="duration" id="duration-select"></select>
+                                <select class="form-select form-select-sm" name="duration"
+                                    id="duration-select"></select>
                             </div>
                         </div>
-                        
+
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary flex-grow-1" id="generate-btn">
                                 CREATE VIDEO
                             </button>
-                            <button type="button" class="btn btn-outline-secondary px-4" id="reset-btn" title="Start New">
+                            <button type="button" class="btn btn-outline-secondary px-4" id="reset-btn"
+                                title="Start New">
                                 ↺ NEW
                             </button>
                         </div>
@@ -376,32 +469,41 @@
                         <div class="fw-bold fs-6">Generating Motion...</div>
                         <div class="small opacity-75 mt-2" id="timer-display">Wait time: ~1 min</div>
                     </div>
-                    
+
                     <!-- Error Toast overlay -->
-                    <div id="error-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 28; align-items: center; justify-content: center; flex-direction: column; padding: 2rem; text-align: center;">
+                    <div id="error-overlay"
+                        style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 28; align-items: center; justify-content: center; flex-direction: column; padding: 2rem; text-align: center;">
                         <div class="text-danger mb-3" style="font-size: 2rem;">⚠️</div>
                         <h5 class="fw-bold text-danger mb-2">Generation Failed</h5>
                         <p class="small text-secondary mb-4" id="error-message">Unknown error occurred.</p>
-                        <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-4" onclick="document.getElementById('error-overlay').style.display='none'">Dismiss</button>
+                        <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-4"
+                            onclick="document.getElementById('error-overlay').style.display='none'">Dismiss</button>
                     </div>
 
                     <div class="drop-zone-content" id="drop-zone-ui">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-plus-circle opacity-50 mb-3" viewBox="0 0 16 16">
-                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+                            class="bi bi-plus-circle opacity-50 mb-3" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                            <path
+                                d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
                         </svg>
                         <p class="mb-0 fw-bold small">Source Image</p>
                         <p class="small opacity-50" style="font-size: 0.65rem;">Drop image or click to start</p>
                     </div>
-                    <input type="file" id="image-input" name="image" accept="image/*" class="drop-zone-input" form="gen-form">
-                    
+                    <input type="file" id="image-input" name="image" accept="image/*" class="drop-zone-input"
+                        form="gen-form">
+
                     <img id="preview-image" class="preview-img" src="#" alt="Preview">
-                    <video id="video-output" controls width="100%" height="100%" style="object-fit: contain; z-index: 20; position: absolute; background:#000; display:none;" autoplay loop>
+                    <video id="video-output" controls width="100%" height="100%"
+                        style="object-fit: contain; z-index: 20; position: absolute; background:#000; display:none;"
+                        autoplay loop>
                         <source src="" type="video/mp4">
                     </video>
-                    
-                    <div class="view-controls" style="position: absolute; top: 12px; right: 12px; z-index: 25; display: none; gap: 8px;">
-                         <button id="show-image-btn" class="btn btn-sm btn-white shadow-sm border rounded-pill fw-bold" style="font-size: 0.75rem;">
+
+                    <div class="view-controls"
+                        style="position: absolute; top: 12px; right: 12px; z-index: 25; display: none; gap: 8px;">
+                        <button id="show-image-btn" class="btn btn-sm btn-white shadow-sm border rounded-pill fw-bold"
+                            style="font-size: 0.75rem;">
                             👁️ View Input
                         </button>
                     </div>
@@ -472,7 +574,7 @@
             els.veo.style.display = m === 'veo3.1' ? 'block' : 'none';
             els.wan.style.display = m === 'wan2.1' ? 'block' : 'none';
             els.timer.textContent = `Wait time: ${m === 'veo3.1' ? '~1 min' : '~5 mins'}`;
-            els.dur.innerHTML = (m === 'veo3.1' ? [4, 6, 8] : [5, 3]).map(o => `<option value="${o}" ${o==4||o==5?'selected':''}>${o}s</option>`).join('');
+            els.dur.innerHTML = (m === 'veo3.1' ? [4, 6, 8] : [5, 3]).map(o => `<option value="${o}" ${o == 4 || o == 5 ? 'selected' : ''}>${o}s</option>`).join('');
         }
         els.model.addEventListener('change', updateUI);
         updateUI();
@@ -480,16 +582,16 @@
         // --- Select Logic ---
         els.camCat.addEventListener('change', () => {
             const cat = els.camCat.value; els.camSub.innerHTML = '';
-            if(cat === 'None') { els.camSubC.style.display='none'; els.fCam.value='None'; }
-            else { 
-                cameraOptions[cat].forEach(o => els.camSub.add(new Option(o,o)));
-                els.camSubC.style.display='block'; els.fCam.value=els.camSub.value;
+            if (cat === 'None') { els.camSubC.style.display = 'none'; els.fCam.value = 'None'; }
+            else {
+                cameraOptions[cat].forEach(o => els.camSub.add(new Option(o, o)));
+                els.camSubC.style.display = 'block'; els.fCam.value = els.camSub.value;
             }
         });
         els.camSub.addEventListener('change', () => els.fCam.value = els.camSub.value);
 
-        function bindCustom(s,c,f) {
-            const u = () => { if(s.value==='Other'){c.style.display='block'; f.value=c.value;}else{c.style.display='none'; f.value=s.value;} };
+        function bindCustom(s, c, f) {
+            const u = () => { if (s.value === 'Other') { c.style.display = 'block'; f.value = c.value; } else { c.style.display = 'none'; f.value = s.value; } };
             s.onchange = u; c.oninput = () => f.value = c.value; u();
         }
         bindCustom(els.sbS, els.sbC, els.fSb); bindCustom(els.evS, els.evC, els.fEv);
@@ -497,15 +599,15 @@
         // --- Previews ---
         els.imgIn.onchange = () => {
             const f = els.imgIn.files[0];
-            if(f) {
+            if (f) {
                 const r = new FileReader();
-                r.onload = e => { 
-                    els.imgPre.src=e.target.result; 
-                    els.imgPre.style.display='block'; 
-                    els.dropUI.style.display='none'; 
-                    els.vid.style.display='none';
-                    els.viewCtrls.style.display='none';
-                    els.errOver.style.display='none';
+                r.onload = e => {
+                    els.imgPre.src = e.target.result;
+                    els.imgPre.style.display = 'block';
+                    els.dropUI.style.display = 'none';
+                    els.vid.style.display = 'none';
+                    els.viewCtrls.style.display = 'none';
+                    els.errOver.style.display = 'none';
                 };
                 r.readAsDataURL(f);
             }
@@ -534,57 +636,57 @@
 
         // --- Actions ---
         els.form.onsubmit = async e => {
-            e.preventDefault(); 
-            els.load.style.display='flex';
-            els.errOver.style.display='none';
-            els.form.style.opacity='0.4'; els.form.style.pointerEvents='none';
+            e.preventDefault();
+            els.load.style.display = 'flex';
+            els.errOver.style.display = 'none';
+            els.form.style.opacity = '0.4'; els.form.style.pointerEvents = 'none';
             const fd = new FormData(els.form);
             try {
-                const res = await fetch('/generate', { 
-                    method:'POST', 
-                    body:fd,
+                const res = await fetch('/generate', {
+                    method: 'POST',
+                    body: fd,
                     headers: { 'Accept': 'application/json' }
                 });
                 const data = await res.json();
-                if(!res.ok) throw new Error(data.message || 'Generation Error');
-                
+                if (!res.ok) throw new Error(data.message || 'Generation Error');
+
                 // Update Video
                 els.vid.src = data.video_url;
                 els.vid.style.display = 'block';
                 els.imgPre.style.display = 'none';
                 els.viewCtrls.style.display = 'flex';
                 els.tog.textContent = '👁️ View Input';
-                
+
                 loadHistory(); // Refresh history list
-            } catch(err) { 
+            } catch (err) {
                 els.errMsg.textContent = err.message;
                 els.errOver.style.display = 'flex';
             } finally {
-                els.load.style.display='none'; 
-                els.form.style.opacity='1'; 
-                els.form.style.pointerEvents='auto';
+                els.load.style.display = 'none';
+                els.form.style.opacity = '1';
+                els.form.style.pointerEvents = 'auto';
             }
         };
 
         els.enh.onclick = async () => {
-            if(!els.prom.value) return alert('Enter prompt');
+            if (!els.prom.value) return alert('Enter prompt');
             els.enh.disabled = true; els.prom.classList.add('enhancing');
             const fd = new FormData(els.form);
             try {
-                const res = await fetch('/enhance_prompt', { method:'POST', body:fd });
-                const d = await res.json(); 
-                if(d.enhanced_prompt) {
+                const res = await fetch('/enhance_prompt', { method: 'POST', body: fd });
+                const d = await res.json();
+                if (d.enhanced_prompt) {
                     els.prom.value = d.enhanced_prompt;
                     els.prom.rows = 4; // Expand prompt box
                 }
-            } catch(e){} finally { els.enh.disabled=false; els.prom.classList.remove('enhancing'); }
+            } catch (e) { } finally { els.enh.disabled = false; els.prom.classList.remove('enhancing'); }
         };
 
         async function loadHistory() {
             try {
                 const res = await fetch('/api/history');
                 const data = await res.json();
-                if(!data || data.length === 0) {
+                if (!data || data.length === 0) {
                     els.hist.innerHTML = '<div class="text-center opacity-30 py-5 small fw-bold">NO GENERATIONS YET</div>';
                 } else {
                     els.hist.innerHTML = data.slice(0, 10).map(i => `
@@ -597,9 +699,10 @@
                             </div>
                         </div>`).join('');
                 }
-            } catch(e){}
+            } catch (e) { }
         }
         loadHistory();
     </script>
 </body>
+
 </html>

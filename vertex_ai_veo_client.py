@@ -205,6 +205,7 @@ class VertexAIVeoClient(IVideoClient):
             enhance_prompt_flag = kwargs.get('enhance_prompt', False)
             add_keywords = kwargs.get('add_keywords', False)  # NEW: Control keyword injection
             aspect_ratio = kwargs.get('aspect_ratio', "16:9")
+            generate_audio = kwargs.get('generate_audio', False)  # NEW: Control audio generation
 
             logger.info(f"[Veo:{self.client_id}][Op:{operation_id}] Parameters extracted:")
             logger.info(f"[Veo:{self.client_id}][Op:{operation_id}]   Duration: {duration_seconds}s")
@@ -213,21 +214,37 @@ class VertexAIVeoClient(IVideoClient):
             logger.info(f"[Veo:{self.client_id}][Op:{operation_id}]   Environment: {environmental_animation}")
             logger.info(f"[Veo:{self.client_id}][Op:{operation_id}]   Enhance: {enhance_prompt_flag}")
             logger.info(f"[Veo:{self.client_id}][Op:{operation_id}]   Add Keywords: {add_keywords}")
+            logger.info(f"[Veo:{self.client_id}][Op:{operation_id}]   Generate Audio: {generate_audio}")
 
-            # Build prompt with keywords (ONLY if add_keywords=True)
+            # Build structured prompt following Veo 3.1 best practices
+            # Format: [Cinematography]. [User Prompt]. [Animation/Environment].
             final_prompt = prompt
-            if add_keywords:
-                keywords = []
-                for kw in [camera_motion, subject_animation, environmental_animation]:
-                    if kw and kw.lower() != "none":
-                        keywords.append(kw)
-
-                formatted_keywords = ", ".join(keywords)
-                if formatted_keywords and formatted_keywords not in prompt:
-                    final_prompt = f"{prompt}. Cinematic style. Keywords: {formatted_keywords}."
-                    logger.info(f"[Veo:{self.client_id}][Op:{operation_id}] ⚠️ Modified prompt with keywords")
+            
+            # Integrate camera motion at the beginning (cinematography first)
+            cinematography = ""
+            if camera_motion and camera_motion.lower() != "none":
+                cinematography = camera_motion
+            
+            # Integrate subject and environmental animation
+            animation_details = []
+            if subject_animation and subject_animation.lower() != "none":
+                animation_details.append(subject_animation.lower())
+            if environmental_animation and environmental_animation.lower() != "none":
+                animation_details.append(environmental_animation.lower())
+            
+            # Construct structured prompt
+            if cinematography or animation_details:
+                parts = []
+                if cinematography:
+                    parts.append(cinematography)
+                parts.append(prompt)  # User's main prompt
+                if animation_details:
+                    parts.append(", ".join(animation_details))
+                
+                final_prompt = ". ".join(parts) + "."
+                logger.info(f"[Veo:{self.client_id}][Op:{operation_id}] ✓ Structured prompt with cinematography/animation")
             else:
-                logger.info(f"[Veo:{self.client_id}][Op:{operation_id}] ✓ Using original prompt unchanged")
+                logger.info(f"[Veo:{self.client_id}][Op:{operation_id}] ✓ Using original prompt (no motion/animation)")
 
             logger.info(f"[Veo:{self.client_id}][Op:{operation_id}] Final prompt: '{final_prompt}'")
 
@@ -272,7 +289,7 @@ class VertexAIVeoClient(IVideoClient):
                         resolution="720p",
                         person_generation="allow_adult",
                         enhance_prompt=enhance_prompt_flag,
-                        generate_audio=False,
+                        generate_audio=generate_audio,  # Now configurable
                     ),
                 )
                 

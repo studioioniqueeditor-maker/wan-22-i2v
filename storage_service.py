@@ -7,8 +7,36 @@ class StorageService:
         if not self.bucket_name:
             raise ValueError("GCS_BUCKET_NAME environment variable is required.")
         
-        # Initialize the client (it will pick up credentials from env automatically)
-        self.client = storage.Client()
+        # Get credentials path from env or use default location
+        credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        
+        # For Cloud Run, credentials_path might not be set but default credentials work
+        # For local/Docker, we need to find gcs-key.json
+        if not credentials_path:
+            # Try multiple fallback locations
+            possible_paths = [
+                os.path.join(os.getcwd(), "gcs-key.json"),  # Current working directory
+                os.path.join(os.path.dirname(os.path.abspath(__file__)), "gcs-key.json"),  # Same dir as this file
+                "/app/gcs-key.json",  # Docker container path
+            ]
+            for path in possible_paths:
+                if os.path.exists(path):
+                    credentials_path = path
+                    break
+        
+        # Initialize the client
+        try:
+            if credentials_path and os.path.exists(credentials_path):
+                # Use explicit service account credentials (local/Docker)
+                from google.oauth2 import service_account
+                credentials = service_account.Credentials.from_service_account_file(credentials_path)
+                self.client = storage.Client(credentials=credentials, project=credentials.project_id)
+            else:
+                # Use default credentials (Cloud Run with Workload Identity)
+                self.client = storage.Client()
+        except Exception as e:
+            raise ValueError(f"Failed to initialize GCS client: {e}")
+        
         self.bucket = self.client.bucket(self.bucket_name)
 
     def upload_file(self, source_file_name, destination_blob_name):

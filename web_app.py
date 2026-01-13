@@ -52,7 +52,12 @@ from job_queue import JobQueue
 from api_router import api_bp, get_api_rate_limiter
 from concurrency_manager import ConcurrencyManager
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    static_folder='static',
+    static_url_path='/static',
+    template_folder='templates'
+)
 app.config['UPLOAD_FOLDER'] = 'temp_uploads'
 app.config['OUTPUT_FOLDER'] = 'output'
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "supersecretkey")
@@ -121,6 +126,14 @@ def handle_unexpected_error(e):
         return jsonify(error="Internal Server Error", details=str(e)), 500
     return render_template('index.html', error="An unexpected error occurred."), 500
 
+@app.errorhandler(404)
+def handle_not_found(e):
+    logger.error(f"404 Not Found: {request.method} {request.path} | Referrer: {request.referrer}")
+    logger.error(f"404 Details - Args: {request.args} | Headers: {dict(request.headers)}")
+    if request.path.startswith('/api/') or request.headers.get('Accept') == 'application/json':
+        return jsonify(error="Not Found", path=request.path), 404
+    return render_template('index.html', error="Page not found"), 404
+
 # --- Helpers ---
 
 def login_required(f):
@@ -152,6 +165,7 @@ def _run_video_generation(user_id, file, form_data):
     duration_seconds = int(form_data.get('duration', 4))
     auto_enhance = form_data.get('auto_enhance') == 'true'
     aspect_ratio = form_data.get('aspect_ratio', '16:9')
+    generate_audio = form_data.get('generate_audio') == 'true'
 
     image_path = None
     try:
@@ -194,7 +208,8 @@ def _run_video_generation(user_id, file, form_data):
             "environmental_animation": environmental_animation,
             "duration_seconds": duration_seconds,
             "enhance_prompt": auto_enhance,
-            "aspect_ratio": aspect_ratio
+            "aspect_ratio": aspect_ratio,
+            "generate_audio": generate_audio
         }
 
         logger.info(f"Starting generation with params: {generation_params}")
